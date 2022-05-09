@@ -100,7 +100,9 @@ import org.jfree.data.general.ValueDataset;
 public class ThermometerPlot extends Plot implements ValueAxisPlot,
         Zoomable, Cloneable, Serializable {
 
-    /** For serialization. */
+    private ThermometerPlotProduct thermometerPlotProduct = new ThermometerPlotProduct();
+
+	/** For serialization. */
     private static final long serialVersionUID = 4087093313147984390L;
 
     /** A constant for unit type 'None'. */
@@ -240,13 +242,6 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
 
     /** The display sub-range. */
     private int subrange = -1;
-
-    /** The start and end values for the subranges. */
-    private double[][] subrangeInfo = {
-        {0.0, 50.0, 0.0, 50.0},
-        {50.0, 75.0, 50.0, 75.0},
-        {75.0, 100.0, 75.0, 100.0}
-    };
 
     /**
      * A flag that controls whether or not the axis range adjusts to the
@@ -717,7 +712,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
      * @param hi  the high value for the range
      */
     public void setSubrangeInfo(int range, double low, double hi) {
-        setSubrangeInfo(range, low, hi, low, hi);
+        thermometerPlotProduct.setSubrangeInfo(range, low, hi, low, hi, this);
     }
 
     /**
@@ -733,12 +728,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
                                 double rangeLow, double rangeHigh,
                                 double displayLow, double displayHigh) {
 
-        if ((range >= 0) && (range < 3)) {
-            setSubrange(range, rangeLow, rangeHigh);
-            setDisplayRange(range, displayLow, displayHigh);
-            setAxisRange();
-            fireChangeEvent();
-        }
+        thermometerPlotProduct.setSubrangeInfo(range, rangeLow, rangeHigh, displayLow, displayHigh, this);
 
     }
 
@@ -750,10 +740,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
      * @param high  the high value.
      */
     public void setSubrange(int range, double low, double high) {
-        if ((range >= 0) && (range < 3)) {
-            this.subrangeInfo[range][RANGE_HIGH] = high;
-            this.subrangeInfo[range][RANGE_LOW] = low;
-        }
+        thermometerPlotProduct.setSubrange(range, low, high);
     }
 
     /**
@@ -765,19 +752,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
      */
     public void setDisplayRange(int range, double low, double high) {
 
-        if ((range >= 0) && (range < this.subrangeInfo.length)
-            && isValidNumber(high) && isValidNumber(low)) {
-
-            if (high > low) {
-                this.subrangeInfo[range][DISPLAY_HIGH] = high;
-                this.subrangeInfo[range][DISPLAY_LOW] = low;
-            }
-            else {
-                this.subrangeInfo[range][DISPLAY_HIGH] = low;
-                this.subrangeInfo[range][DISPLAY_LOW] = high;
-            }
-
-        }
+        thermometerPlotProduct.setDisplayRange(range, low, high);
 
     }
 
@@ -1061,7 +1036,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
                 Range range = this.rangeAxis.getRange();
 
                 // draw start of normal range
-                double value = this.subrangeInfo[NORMAL][RANGE_LOW];
+                double value = this.thermometerPlotProduct.getSubrangeInfo()[NORMAL][RANGE_LOW];
                 if (range.contains(value)) {
                     double x = midX + getColumnRadius() + 2;
                     double y = this.rangeAxis.valueToJava2D(value, dataArea,
@@ -1072,7 +1047,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
                 }
 
                 // draw start of warning range
-                value = this.subrangeInfo[WARNING][RANGE_LOW];
+                value = this.thermometerPlotProduct.getSubrangeInfo()[WARNING][RANGE_LOW];
                 if (range.contains(value)) {
                     double x = midX + getColumnRadius() + 2;
                     double y = this.rangeAxis.valueToJava2D(value, dataArea,
@@ -1083,7 +1058,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
                 }
 
                 // draw start of critical range
-                value = this.subrangeInfo[CRITICAL][RANGE_LOW];
+                value = this.thermometerPlotProduct.getSubrangeInfo()[CRITICAL][RANGE_LOW];
                 if (range.contains(value)) {
                     double x = midX + getColumnRadius() + 2;
                     double y = this.rangeAxis.valueToJava2D(value, dataArea,
@@ -1204,13 +1179,13 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
             Number vn = this.dataset.getValue();
             if (vn != null) {
                 double value = vn.doubleValue();
-                if (inSubrange(NORMAL, value)) {
+                if (thermometerPlotProduct.inSubrange(NORMAL, value)) {
                     this.subrange = NORMAL;
                 }
-                else if (inSubrange(WARNING, value)) {
+                else if (thermometerPlotProduct.inSubrange(WARNING, value)) {
                    this.subrange = WARNING;
                 }
-                else if (inSubrange(CRITICAL, value)) {
+                else if (thermometerPlotProduct.inSubrange(CRITICAL, value)) {
                     this.subrange = CRITICAL;
                 }
                 else {
@@ -1240,8 +1215,8 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
     protected void setAxisRange() {
         if ((this.subrange >= 0) && (this.followDataInSubranges)) {
             this.rangeAxis.setRange(
-                    new Range(this.subrangeInfo[this.subrange][DISPLAY_LOW],
-                    this.subrangeInfo[this.subrange][DISPLAY_HIGH]));
+                    new Range(this.thermometerPlotProduct.getSubrangeInfo()[this.subrange][DISPLAY_LOW],
+                    this.thermometerPlotProduct.getSubrangeInfo()[this.subrange][DISPLAY_HIGH]));
         }
         else {
             this.rangeAxis.setRange(this.lowerBound, this.upperBound);
@@ -1281,19 +1256,6 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
     }
 
     /**
-     * Returns true if the value is in the specified range, and false otherwise.
-     *
-     * @param subrange  the subrange.
-     * @param value  the value to check.
-     *
-     * @return A boolean.
-     */
-    private boolean inSubrange(int subrange, double value) {
-        return (value > this.subrangeInfo[subrange][RANGE_LOW]
-            && value <= this.subrangeInfo[subrange][RANGE_HIGH]);
-    }
-
-    /**
      * Returns the mercury paint corresponding to the current data value.
      * Called from the {@link #draw(Graphics2D, Rectangle2D, Point2D,
      * PlotState, PlotRenderingInfo)} method.
@@ -1304,13 +1266,13 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
         Paint result = this.mercuryPaint;
         if (this.useSubrangePaint) {
             double value = this.dataset.getValue().doubleValue();
-            if (inSubrange(NORMAL, value)) {
+            if (thermometerPlotProduct.inSubrange(NORMAL, value)) {
                 result = this.subrangePaint[NORMAL];
             }
-            else if (inSubrange(WARNING, value)) {
+            else if (thermometerPlotProduct.inSubrange(WARNING, value)) {
                 result = this.subrangePaint[WARNING];
             }
-            else if (inSubrange(CRITICAL, value)) {
+            else if (thermometerPlotProduct.inSubrange(CRITICAL, value)) {
                 result = this.subrangePaint[CRITICAL];
             }
         }
@@ -1386,7 +1348,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
         if (this.followDataInSubranges != that.followDataInSubranges) {
             return false;
         }
-        if (!equal(this.subrangeInfo, that.subrangeInfo)) {
+        if (!equal(this.thermometerPlotProduct.getSubrangeInfo(), that.thermometerPlotProduct.getSubrangeInfo())) {
             return false;
         }
         if (this.useSubrangePaint != that.useSubrangePaint) {
@@ -1447,6 +1409,7 @@ public class ThermometerPlot extends Plot implements ValueAxisPlot,
     public Object clone() throws CloneNotSupportedException {
 
         ThermometerPlot clone = (ThermometerPlot) super.clone();
+		clone.thermometerPlotProduct = (ThermometerPlotProduct) this.thermometerPlotProduct.clone();
 
         if (clone.dataset != null) {
             clone.dataset.addChangeListener(clone);
