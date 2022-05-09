@@ -95,7 +95,9 @@ import org.jfree.data.ItemKey;
  */
 public abstract class AbstractRenderer implements ChartElement, Cloneable, Serializable {
 
-    private AbstractRendererProduct2 abstractRendererProduct2 = new AbstractRendererProduct2();
+    private AbstractRendererProduct3 abstractRendererProduct3 = new AbstractRendererProduct3();
+
+	private AbstractRendererProduct2 abstractRendererProduct2 = new AbstractRendererProduct2();
 
 	private AbstractRendererProduct abstractRendererProduct = new AbstractRendererProduct();
 
@@ -127,12 +129,6 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
 
     /** The default value label paint. */
     public static final Paint DEFAULT_VALUE_LABEL_PAINT = Color.BLACK;
-
-    /** A list of flags that controls whether or not each series is visible. */
-    private Map<Integer, Boolean> seriesVisibleMap;
-
-    /** The default visibility for all series. */
-    private boolean defaultSeriesVisible;
 
     /** The paint for each series. */
     private transient Map<Integer, Paint> seriesPaintMap;
@@ -297,8 +293,8 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * Default constructor.
      */
     public AbstractRenderer() {
-        this.seriesVisibleMap = new HashMap<>();
-        this.defaultSeriesVisible = true;
+        abstractRendererProduct3.setSeriesVisibleMap(new HashMap<>());
+        abstractRendererProduct3.setDefaultSeriesVisible2(true);
 
         abstractRendererProduct2.setSeriesVisibleInLegendMap(new HashMap<>());
         abstractRendererProduct2.setDefaultSeriesVisibleInLegend2(true);
@@ -420,7 +416,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @return A boolean.
      */
     public boolean getItemVisible(int series, int item) {
-        return isSeriesVisible(series);
+        return abstractRendererProduct3.isSeriesVisible(series);
     }
 
     /**
@@ -434,12 +430,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @return A boolean.
      */
     public boolean isSeriesVisible(int series) {
-        boolean result = this.defaultSeriesVisible;
-        Boolean b = this.seriesVisibleMap.get(series);
-        if (b != null) {
-            result = b;
-        }
-        return result;
+        return abstractRendererProduct3.isSeriesVisible(series);
     }
 
     /**
@@ -452,7 +443,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #setSeriesVisible(int, Boolean)
      */
     public Boolean getSeriesVisible(int series) {
-        return this.seriesVisibleMap.get(series);
+        return this.abstractRendererProduct3.getSeriesVisibleMap().get(series);
     }
 
     /**
@@ -480,7 +471,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #getSeriesVisible(int)
      */
     public void setSeriesVisible(int series, Boolean visible, boolean notify) {
-        this.seriesVisibleMap.put(series, visible);
+        this.abstractRendererProduct3.getSeriesVisibleMap().put(series, visible);
         if (notify) {
             // we create an event with a special flag set...the purpose of
             // this is to communicate to the plot (the default receiver of
@@ -499,7 +490,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #setDefaultSeriesVisible(boolean)
      */
     public boolean getDefaultSeriesVisible() {
-        return this.defaultSeriesVisible;
+        return this.abstractRendererProduct3.getDefaultSeriesVisible();
     }
 
     /**
@@ -512,7 +503,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setDefaultSeriesVisible(boolean visible) {
         // defer argument checking...
-        setDefaultSeriesVisible(visible, true);
+        abstractRendererProduct3.setDefaultSeriesVisible(visible, true, this);
     }
 
     /**
@@ -525,15 +516,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #getDefaultSeriesVisible()
      */
     public void setDefaultSeriesVisible(boolean visible, boolean notify) {
-        this.defaultSeriesVisible = visible;
-        if (notify) {
-            // we create an event with a special flag set...the purpose of
-            // this is to communicate to the plot (the default receiver of
-            // the event) that series visibility has changed so the axis
-            // ranges might need updating...
-            RendererChangeEvent e = new RendererChangeEvent(this, true);
-            notifyListeners(e);
-        }
+        abstractRendererProduct3.setDefaultSeriesVisible(visible, notify, this);
     }
 
     // SERIES VISIBLE IN LEGEND (not yet respected by all renderers)
@@ -2693,10 +2676,10 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         if (this.defaultEntityRadius != that.defaultEntityRadius) {
             return false;
         }
-        if (!this.seriesVisibleMap.equals(that.seriesVisibleMap)) {
+        if (!this.abstractRendererProduct3.getSeriesVisibleMap().equals(that.abstractRendererProduct3.getSeriesVisibleMap())) {
             return false;
         }
-        if (this.defaultSeriesVisible != that.defaultSeriesVisible) {
+        if (this.abstractRendererProduct3.getDefaultSeriesVisible() != that.abstractRendererProduct3.getDefaultSeriesVisible()) {
             return false;
         }
         if (!this.abstractRendererProduct2.getSeriesVisibleInLegendMap().equals(that.abstractRendererProduct2.getSeriesVisibleInLegendMap())) {
@@ -2833,8 +2816,8 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     @Override
     public int hashCode() {
         int result = 193;
-        result = HashUtils.hashCode(result, this.seriesVisibleMap);
-        result = HashUtils.hashCode(result, this.defaultSeriesVisible);
+        result = HashUtils.hashCode(result, this.abstractRendererProduct3.getSeriesVisibleMap());
+        result = HashUtils.hashCode(result, this.abstractRendererProduct3.getDefaultSeriesVisible());
         result = HashUtils.hashCode(result, this.abstractRendererProduct2.getSeriesVisibleInLegendMap());
         result = HashUtils.hashCode(result, this.abstractRendererProduct2.getDefaultSeriesVisibleInLegend());
         result = HashUtils.hashCode(result, this.seriesPaintMap);
@@ -2876,11 +2859,13 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     @Override
     protected Object clone() throws CloneNotSupportedException {
         AbstractRenderer clone = (AbstractRenderer) super.clone();
+		clone.abstractRendererProduct3 = (AbstractRendererProduct3) this.abstractRendererProduct3.clone();
 		clone.abstractRendererProduct2 = (AbstractRendererProduct2) this.abstractRendererProduct2.clone();
 		clone.abstractRendererProduct = (AbstractRendererProduct) this.abstractRendererProduct.clone();
 
-        if (this.seriesVisibleMap != null) {
-            clone.seriesVisibleMap = new HashMap<>(this.seriesVisibleMap);
+        if (this.abstractRendererProduct3.getSeriesVisibleMap() != null) {
+            clone.abstractRendererProduct3
+					.setSeriesVisibleMap(new HashMap<>(this.abstractRendererProduct3.getSeriesVisibleMap()));
         }
 
         if (this.abstractRendererProduct2.getSeriesVisibleInLegendMap() != null) {
