@@ -102,7 +102,9 @@ import org.jfree.data.xy.XYDataset;
 public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
         RendererChangeListener, Cloneable, Serializable {
 
-    private PolarPlotProduct polarPlotProduct = new PolarPlotProduct();
+    private PolarPlotProduct2 polarPlotProduct2 = new PolarPlotProduct2();
+
+	private PolarPlotProduct polarPlotProduct = new PolarPlotProduct();
 
 	/** For serialization. */
     private static final long serialVersionUID = 3794383185924179525L;
@@ -150,33 +152,6 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * The tick unit that controls the spacing between the angular grid lines.
      */
     private TickUnit angleTickUnit;
-
-    /** A flag that controls whether or not the angle labels are visible. */
-    private boolean angleLabelsVisible = true;
-
-    /** The font used to display the angle labels - never null. */
-    private Font angleLabelFont = new Font("SansSerif", Font.PLAIN, 12);
-
-    /** The paint used to display the angle labels. */
-    private transient Paint angleLabelPaint = Color.BLACK;
-
-    /** A flag that controls whether the angular grid-lines are visible. */
-    private boolean angleGridlinesVisible;
-
-    /** The stroke used to draw the angular grid-lines. */
-    private transient Stroke angleGridlineStroke;
-
-    /** The paint used to draw the angular grid-lines. */
-    private transient Paint angleGridlinePaint;
-
-    /** A flag that controls whether the radius grid-lines are visible. */
-    private boolean radiusGridlinesVisible;
-
-    /** The stroke used to draw the radius grid-lines. */
-    private transient Stroke radiusGridlineStroke;
-
-    /** The paint used to draw the radius grid-lines. */
-    private transient Paint radiusGridlinePaint;
 
     /**
      * A flag that controls whether the radial minor grid-lines are visible.
@@ -253,14 +228,14 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
 
         polarPlotProduct.setAngleOffset2(DEFAULT_ANGLE_OFFSET);
         polarPlotProduct.setCounterClockwise(false);
-        this.angleGridlinesVisible = true;
-        this.angleGridlineStroke = DEFAULT_GRIDLINE_STROKE;
-        this.angleGridlinePaint = DEFAULT_GRIDLINE_PAINT;
+        polarPlotProduct2.setAngleGridlinesVisible2(true);
+        polarPlotProduct2.setAngleGridlineStroke2(DEFAULT_GRIDLINE_STROKE);
+        polarPlotProduct2.setAngleGridlinePaint2(DEFAULT_GRIDLINE_PAINT);
 
-        this.radiusGridlinesVisible = true;
+        polarPlotProduct2.setRadiusGridlinesVisible2(true);
         this.radiusMinorGridlinesVisible = true;
-        this.radiusGridlineStroke = DEFAULT_GRIDLINE_STROKE;
-        this.radiusGridlinePaint = DEFAULT_GRIDLINE_PAINT;
+        polarPlotProduct2.setRadiusGridlineStroke2(DEFAULT_GRIDLINE_STROKE);
+        polarPlotProduct2.setRadiusGridlinePaint2(DEFAULT_GRIDLINE_PAINT);
         polarPlotProduct.setMargin2(DEFAULT_MARGIN);
     }
 
@@ -679,7 +654,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setAngleLabelsVisible(boolean)
      */
     public boolean isAngleLabelsVisible() {
-        return this.angleLabelsVisible;
+        return this.polarPlotProduct2.getAngleLabelsVisible();
     }
 
     /**
@@ -691,10 +666,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #isAngleLabelsVisible()
      */
     public void setAngleLabelsVisible(boolean visible) {
-        if (this.angleLabelsVisible != visible) {
-            this.angleLabelsVisible = visible;
-            fireChangeEvent();
-        }
+        polarPlotProduct2.setAngleLabelsVisible(visible, this);
     }
 
     /**
@@ -705,7 +677,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setAngleLabelFont(Font)
      */
     public Font getAngleLabelFont() {
-        return this.angleLabelFont;
+        return this.polarPlotProduct2.getAngleLabelFont();
     }
 
     /**
@@ -717,9 +689,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #getAngleLabelFont()
      */
     public void setAngleLabelFont(Font font) {
-        Args.nullNotPermitted(font, "font");
-        this.angleLabelFont = font;
-        fireChangeEvent();
+        polarPlotProduct2.setAngleLabelFont(font, this);
     }
 
     /**
@@ -730,7 +700,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setAngleLabelPaint(Paint)
      */
     public Paint getAngleLabelPaint() {
-        return this.angleLabelPaint;
+        return this.polarPlotProduct2.getAngleLabelPaint();
     }
 
     /**
@@ -740,9 +710,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @param paint  the paint ({@code null} not permitted).
      */
     public void setAngleLabelPaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        this.angleLabelPaint = paint;
-        fireChangeEvent();
+        polarPlotProduct2.setAngleLabelPaint(paint, this);
     }
 
     /**
@@ -754,7 +722,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setAngleGridlinesVisible(boolean)
      */
     public boolean isAngleGridlinesVisible() {
-        return this.angleGridlinesVisible;
+        return this.polarPlotProduct2.getAngleGridlinesVisible();
     }
 
     /**
@@ -769,10 +737,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #isAngleGridlinesVisible()
      */
     public void setAngleGridlinesVisible(boolean visible) {
-        if (this.angleGridlinesVisible != visible) {
-            this.angleGridlinesVisible = visible;
-            fireChangeEvent();
-        }
+        polarPlotProduct2.setAngleGridlinesVisible(visible, this);
     }
 
     /**
@@ -784,7 +749,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setAngleGridlineStroke(Stroke)
      */
     public Stroke getAngleGridlineStroke() {
-        return this.angleGridlineStroke;
+        return this.polarPlotProduct2.getAngleGridlineStroke();
     }
 
     /**
@@ -798,8 +763,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #getAngleGridlineStroke()
      */
     public void setAngleGridlineStroke(Stroke stroke) {
-        this.angleGridlineStroke = stroke;
-        fireChangeEvent();
+        polarPlotProduct2.setAngleGridlineStroke(stroke, this);
     }
 
     /**
@@ -811,7 +775,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setAngleGridlinePaint(Paint)
      */
     public Paint getAngleGridlinePaint() {
-        return this.angleGridlinePaint;
+        return this.polarPlotProduct2.getAngleGridlinePaint();
     }
 
     /**
@@ -824,8 +788,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #getAngleGridlinePaint()
      */
     public void setAngleGridlinePaint(Paint paint) {
-        this.angleGridlinePaint = paint;
-        fireChangeEvent();
+        polarPlotProduct2.setAngleGridlinePaint(paint, this);
     }
 
     /**
@@ -837,7 +800,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setRadiusGridlinesVisible(boolean)
      */
     public boolean isRadiusGridlinesVisible() {
-        return this.radiusGridlinesVisible;
+        return this.polarPlotProduct2.getRadiusGridlinesVisible();
     }
 
     /**
@@ -852,10 +815,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #isRadiusGridlinesVisible()
      */
     public void setRadiusGridlinesVisible(boolean visible) {
-        if (this.radiusGridlinesVisible != visible) {
-            this.radiusGridlinesVisible = visible;
-            fireChangeEvent();
-        }
+        polarPlotProduct2.setRadiusGridlinesVisible(visible, this);
     }
 
     /**
@@ -867,7 +827,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setRadiusGridlineStroke(Stroke)
      */
     public Stroke getRadiusGridlineStroke() {
-        return this.radiusGridlineStroke;
+        return this.polarPlotProduct2.getRadiusGridlineStroke();
     }
 
     /**
@@ -881,8 +841,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #getRadiusGridlineStroke()
      */
     public void setRadiusGridlineStroke(Stroke stroke) {
-        this.radiusGridlineStroke = stroke;
-        fireChangeEvent();
+        polarPlotProduct2.setRadiusGridlineStroke(stroke, this);
     }
 
     /**
@@ -894,7 +853,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #setRadiusGridlinePaint(Paint)
      */
     public Paint getRadiusGridlinePaint() {
-        return this.radiusGridlinePaint;
+        return this.polarPlotProduct2.getRadiusGridlinePaint();
     }
 
     /**
@@ -908,8 +867,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      * @see #getRadiusGridlinePaint()
      */
     public void setRadiusGridlinePaint(Paint paint) {
-        this.radiusGridlinePaint = paint;
-        fireChangeEvent();
+        polarPlotProduct2.setRadiusGridlinePaint(paint, this);
     }
 
     /**
@@ -1573,7 +1531,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
         if (!this.angleTickUnit.equals(that.angleTickUnit)) {
             return false;
         }
-        if (this.angleGridlinesVisible != that.angleGridlinesVisible) {
+        if (this.polarPlotProduct2.getAngleGridlinesVisible() != that.polarPlotProduct2.getAngleGridlinesVisible()) {
             return false;
         }
         if (this.polarPlotProduct.getAngleOffset() != that.polarPlotProduct.getAngleOffset())
@@ -1584,31 +1542,31 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
         {
             return false;
         }
-        if (this.angleLabelsVisible != that.angleLabelsVisible) {
+        if (this.polarPlotProduct2.getAngleLabelsVisible() != that.polarPlotProduct2.getAngleLabelsVisible()) {
             return false;
         }
-        if (!this.angleLabelFont.equals(that.angleLabelFont)) {
+        if (!this.polarPlotProduct2.getAngleLabelFont().equals(that.polarPlotProduct2.getAngleLabelFont())) {
             return false;
         }
-        if (!PaintUtils.equal(this.angleLabelPaint, that.angleLabelPaint)) {
+        if (!PaintUtils.equal(this.polarPlotProduct2.getAngleLabelPaint(), that.polarPlotProduct2.getAngleLabelPaint())) {
             return false;
         }
-        if (!Objects.equals(this.angleGridlineStroke, that.angleGridlineStroke)) {
+        if (!Objects.equals(this.polarPlotProduct2.getAngleGridlineStroke(), that.polarPlotProduct2.getAngleGridlineStroke())) {
             return false;
         }
         if (!PaintUtils.equal(
-            this.angleGridlinePaint, that.angleGridlinePaint
+            this.polarPlotProduct2.getAngleGridlinePaint(), that.polarPlotProduct2.getAngleGridlinePaint()
         )) {
             return false;
         }
-        if (this.radiusGridlinesVisible != that.radiusGridlinesVisible) {
+        if (this.polarPlotProduct2.getRadiusGridlinesVisible() != that.polarPlotProduct2.getRadiusGridlinesVisible()) {
             return false;
         }
-        if (!Objects.equals(this.radiusGridlineStroke, that.radiusGridlineStroke)) {
+        if (!Objects.equals(this.polarPlotProduct2.getRadiusGridlineStroke(), that.polarPlotProduct2.getRadiusGridlineStroke())) {
             return false;
         }
-        if (!PaintUtils.equal(this.radiusGridlinePaint,
-                that.radiusGridlinePaint)) {
+        if (!PaintUtils.equal(this.polarPlotProduct2.getRadiusGridlinePaint(),
+                that.polarPlotProduct2.getRadiusGridlinePaint())) {
             return false;
         }
         if (this.radiusMinorGridlinesVisible !=
@@ -1638,6 +1596,7 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
     @Override
     public Object clone() throws CloneNotSupportedException {
         PolarPlot clone = (PolarPlot) super.clone();
+		clone.polarPlotProduct2 = (PolarPlotProduct2) this.polarPlotProduct2.clone();
 		clone.polarPlotProduct = (PolarPlotProduct) this.polarPlotProduct.clone();
         clone.axes = CloneUtils.clone(this.axes);
         for (int i = 0; i < this.axes.size(); i++) {
@@ -1685,11 +1644,11 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
      */
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
-        SerialUtils.writeStroke(this.angleGridlineStroke, stream);
-        SerialUtils.writePaint(this.angleGridlinePaint, stream);
-        SerialUtils.writeStroke(this.radiusGridlineStroke, stream);
-        SerialUtils.writePaint(this.radiusGridlinePaint, stream);
-        SerialUtils.writePaint(this.angleLabelPaint, stream);
+        SerialUtils.writeStroke(this.polarPlotProduct2.getAngleGridlineStroke(), stream);
+        SerialUtils.writePaint(this.polarPlotProduct2.getAngleGridlinePaint(), stream);
+        SerialUtils.writeStroke(this.polarPlotProduct2.getRadiusGridlineStroke(), stream);
+        SerialUtils.writePaint(this.polarPlotProduct2.getRadiusGridlinePaint(), stream);
+        SerialUtils.writePaint(this.polarPlotProduct2.getAngleLabelPaint(), stream);
     }
 
     /**
@@ -1704,11 +1663,11 @@ public class PolarPlot extends Plot implements ValueAxisPlot, Zoomable,
         throws IOException, ClassNotFoundException {
 
         stream.defaultReadObject();
-        this.angleGridlineStroke = SerialUtils.readStroke(stream);
-        this.angleGridlinePaint = SerialUtils.readPaint(stream);
-        this.radiusGridlineStroke = SerialUtils.readStroke(stream);
-        this.radiusGridlinePaint = SerialUtils.readPaint(stream);
-        this.angleLabelPaint = SerialUtils.readPaint(stream);
+        polarPlotProduct2.setAngleGridlineStroke2(SerialUtils.readStroke(stream));
+        polarPlotProduct2.setAngleGridlinePaint2(SerialUtils.readPaint(stream));
+        polarPlotProduct2.setRadiusGridlineStroke2(SerialUtils.readStroke(stream));
+        polarPlotProduct2.setRadiusGridlinePaint2(SerialUtils.readPaint(stream));
+        polarPlotProduct2.setAngleLabelPaint2(SerialUtils.readPaint(stream));
 
         int rangeAxisCount = this.axes.size();
         for (int i = 0; i < rangeAxisCount; i++) {
