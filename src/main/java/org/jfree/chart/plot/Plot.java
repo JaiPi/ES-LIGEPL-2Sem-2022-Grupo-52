@@ -108,7 +108,9 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         DatasetChangeListener, AnnotationChangeListener, MarkerChangeListener,
         LegendItemSource, PublicCloneable, Cloneable, Serializable {
 
-    /** For serialization. */
+    private PlotProduct plotProduct = new PlotProduct();
+
+	/** For serialization. */
     private static final long serialVersionUID = -8831571430103671324L;
 
     /** Useful constant representing zero. */
@@ -184,15 +186,6 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
     /** An optional color used to fill the plot background. */
     private transient Paint backgroundPaint;
 
-    /** An optional image for the plot background. */
-    private transient Image backgroundImage;  // not currently serialized
-
-    /** The alignment for the background image. */
-    private RectangleAlignment backgroundImageAlignment = RectangleAlignment.FILL;
-
-    /** The alpha value used to draw the background image. */
-    private float backgroundImageAlpha = 0.5f;
-
     /** The alpha-transparency for the plot. */
     private float foregroundAlpha;
 
@@ -221,7 +214,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         this.insets = DEFAULT_INSETS;
         this.backgroundPaint = DEFAULT_BACKGROUND_PAINT;
         this.backgroundAlpha = DEFAULT_BACKGROUND_ALPHA;
-        this.backgroundImage = null;
+        plotProduct.setBackgroundImage2(null);
         this.outlineVisible = true;
         this.outlineStroke = DEFAULT_OUTLINE_STROKE;
         this.outlinePaint = DEFAULT_OUTLINE_PAINT;
@@ -598,7 +591,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #setBackgroundImage(Image)
      */
     public Image getBackgroundImage() {
-        return this.backgroundImage;
+        return this.plotProduct.getBackgroundImage();
     }
 
     /**
@@ -610,8 +603,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #getBackgroundImage()
      */
     public void setBackgroundImage(Image image) {
-        this.backgroundImage = image;
-        fireChangeEvent();
+        plotProduct.setBackgroundImage(image, this);
     }
 
     /**
@@ -623,7 +615,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #setBackgroundImageAlignment(RectangleAlignment)
      */
     public RectangleAlignment getBackgroundImageAlignment() {
-        return this.backgroundImageAlignment;
+        return this.plotProduct.getBackgroundImageAlignment();
     }
 
     /**
@@ -635,11 +627,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #getBackgroundImageAlignment()
      */
     public void setBackgroundImageAlignment(RectangleAlignment alignment) {
-        Args.nullNotPermitted(alignment, "alignment");
-        if (this.backgroundImageAlignment != alignment) {
-            this.backgroundImageAlignment = alignment;
-            fireChangeEvent();
-        }
+        plotProduct.setBackgroundImageAlignment(alignment, this);
     }
 
     /**
@@ -652,7 +640,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #setBackgroundImageAlpha(float)
      */
     public float getBackgroundImageAlpha() {
-        return this.backgroundImageAlpha;
+        return this.plotProduct.getBackgroundImageAlpha();
     }
 
     /**
@@ -667,14 +655,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #getBackgroundImageAlpha()
      */
     public void setBackgroundImageAlpha(float alpha) {
-        if (alpha < 0.0f || alpha > 1.0f) {
-            throw new IllegalArgumentException(
-                    "The 'alpha' value must be in the range 0.0f to 1.0f.");
-        }
-        if (this.backgroundImageAlpha != alpha) {
-            this.backgroundImageAlpha = alpha;
-            fireChangeEvent();
-        }
+        plotProduct.setBackgroundImageAlpha(alpha, this);
     }
 
     /**
@@ -937,7 +918,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         // some subclasses override this method completely, so don't put
         // anything here that *must* be done
         fillBackground(g2, area);
-        drawBackgroundImage(g2, area);
+        plotProduct.drawBackgroundImage(g2, area);
     }
 
     /**
@@ -1005,23 +986,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #getBackgroundImageAlpha()
      */
     public void drawBackgroundImage(Graphics2D g2, Rectangle2D area) {
-        if (this.backgroundImage == null) {
-            return;  // nothing to do
-        }
-        Composite savedComposite = g2.getComposite();
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
-                this.backgroundImageAlpha));
-        Rectangle2D dest = new Rectangle2D.Double(0.0, 0.0,
-                this.backgroundImage.getWidth(null),
-                this.backgroundImage.getHeight(null));
-        this.backgroundImageAlignment.align(dest, area);
-        Shape savedClip = g2.getClip();
-        g2.clip(area);
-        g2.drawImage(this.backgroundImage, (int) dest.getX(),
-                (int) dest.getY(), (int) dest.getWidth() + 1,
-                (int) dest.getHeight() + 1, null);
-        g2.setClip(savedClip);
-        g2.setComposite(savedComposite);
+        plotProduct.drawBackgroundImage(g2, area);
     }
 
     /**
@@ -1252,13 +1217,13 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         if (!PaintUtils.equal(this.backgroundPaint, that.backgroundPaint)) {
             return false;
         }
-        if (!Objects.equals(this.backgroundImage, that.backgroundImage)) {
+        if (!Objects.equals(this.plotProduct.getBackgroundImage(), that.plotProduct.getBackgroundImage())) {
             return false;
         }
-        if (this.backgroundImageAlignment != that.backgroundImageAlignment) {
+        if (this.plotProduct.getBackgroundImageAlignment() != that.plotProduct.getBackgroundImageAlignment()) {
             return false;
         }
-        if (this.backgroundImageAlpha != that.backgroundImageAlpha) {
+        if (this.plotProduct.getBackgroundImageAlpha() != that.plotProduct.getBackgroundImageAlpha()) {
             return false;
         }
         if (this.foregroundAlpha != that.foregroundAlpha) {
@@ -1287,6 +1252,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
     @Override
     public Object clone() throws CloneNotSupportedException {
         Plot clone = (Plot) super.clone();
+		clone.plotProduct = (PlotProduct) this.plotProduct.clone();
         // private Plot parent <-- don't clone the parent plot, but take care
         // childs in combined plots instead
         clone.drawingSupplier = CloneUtils.clone(this.drawingSupplier);
