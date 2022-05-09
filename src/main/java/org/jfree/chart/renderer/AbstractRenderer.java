@@ -95,7 +95,9 @@ import org.jfree.data.ItemKey;
  */
 public abstract class AbstractRenderer implements ChartElement, Cloneable, Serializable {
 
-    private AbstractRendererProduct abstractRendererProduct = new AbstractRendererProduct();
+    private AbstractRendererProduct2 abstractRendererProduct2 = new AbstractRendererProduct2();
+
+	private AbstractRendererProduct abstractRendererProduct = new AbstractRendererProduct();
 
 	/** For serialization. */
     private static final long serialVersionUID = -828267569428206075L;
@@ -131,15 +133,6 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
 
     /** The default visibility for all series. */
     private boolean defaultSeriesVisible;
-
-    /**
-     * A list of flags that controls whether or not each series is visible in
-     * the legend.
-     */
-    private Map<Integer, Boolean> seriesVisibleInLegendMap;
-
-    /** The default visibility for each series in the legend. */
-    private boolean defaultSeriesVisibleInLegend;
 
     /** The paint for each series. */
     private transient Map<Integer, Paint> seriesPaintMap;
@@ -307,8 +300,8 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         this.seriesVisibleMap = new HashMap<>();
         this.defaultSeriesVisible = true;
 
-        this.seriesVisibleInLegendMap = new HashMap<>();
-        this.defaultSeriesVisibleInLegend = true;
+        abstractRendererProduct2.setSeriesVisibleInLegendMap(new HashMap<>());
+        abstractRendererProduct2.setDefaultSeriesVisibleInLegend2(true);
 
         this.seriesPaintMap = new HashMap<>();
         this.defaultPaint = DEFAULT_PAINT;
@@ -554,12 +547,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @return A boolean.
      */
     public boolean isSeriesVisibleInLegend(int series) {
-        boolean result = this.defaultSeriesVisibleInLegend;
-        Boolean b = this.seriesVisibleInLegendMap.get(series);
-        if (b != null) {
-            result = b;
-        }
-        return result;
+        return abstractRendererProduct2.isSeriesVisibleInLegend(series);
     }
 
     /**
@@ -575,7 +563,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #setSeriesVisibleInLegend(int, Boolean)
      */
     public Boolean getSeriesVisibleInLegend(int series) {
-        return this.seriesVisibleInLegendMap.get(series);
+        return this.abstractRendererProduct2.getSeriesVisibleInLegendMap().get(series);
     }
 
     /**
@@ -603,7 +591,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #getSeriesVisibleInLegend(int)
      */
     public void setSeriesVisibleInLegend(int series, Boolean visible, boolean notify) {
-        this.seriesVisibleInLegendMap.put(series, visible);
+        this.abstractRendererProduct2.getSeriesVisibleInLegendMap().put(series, visible);
         if (notify) {
             fireChangeEvent();
         }
@@ -617,7 +605,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #setDefaultSeriesVisibleInLegend(boolean)
      */
     public boolean getDefaultSeriesVisibleInLegend() {
-        return this.defaultSeriesVisibleInLegend;
+        return this.abstractRendererProduct2.getDefaultSeriesVisibleInLegend();
     }
 
     /**
@@ -630,7 +618,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setDefaultSeriesVisibleInLegend(boolean visible) {
         // defer argument checking...
-        setDefaultSeriesVisibleInLegend(visible, true);
+        abstractRendererProduct2.setDefaultSeriesVisibleInLegend(visible, true, this);
     }
 
     /**
@@ -644,10 +632,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setDefaultSeriesVisibleInLegend(boolean visible, 
             boolean notify) {
-        this.defaultSeriesVisibleInLegend = visible;
-        if (notify) {
-            fireChangeEvent();
-        }
+        abstractRendererProduct2.setDefaultSeriesVisibleInLegend(visible, notify, this);
     }
 
     // PAINT
@@ -2714,11 +2699,11 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         if (this.defaultSeriesVisible != that.defaultSeriesVisible) {
             return false;
         }
-        if (!this.seriesVisibleInLegendMap.equals(that.seriesVisibleInLegendMap)) {
+        if (!this.abstractRendererProduct2.getSeriesVisibleInLegendMap().equals(that.abstractRendererProduct2.getSeriesVisibleInLegendMap())) {
             return false;
         }
-        if (this.defaultSeriesVisibleInLegend
-                != that.defaultSeriesVisibleInLegend) {
+        if (this.abstractRendererProduct2.getDefaultSeriesVisibleInLegend()
+                != that.abstractRendererProduct2.getDefaultSeriesVisibleInLegend()) {
             return false;
         }
         if (!PaintUtils.equal(this.seriesPaintMap, that.seriesPaintMap)) {
@@ -2850,8 +2835,8 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         int result = 193;
         result = HashUtils.hashCode(result, this.seriesVisibleMap);
         result = HashUtils.hashCode(result, this.defaultSeriesVisible);
-        result = HashUtils.hashCode(result, this.seriesVisibleInLegendMap);
-        result = HashUtils.hashCode(result, this.defaultSeriesVisibleInLegend);
+        result = HashUtils.hashCode(result, this.abstractRendererProduct2.getSeriesVisibleInLegendMap());
+        result = HashUtils.hashCode(result, this.abstractRendererProduct2.getDefaultSeriesVisibleInLegend());
         result = HashUtils.hashCode(result, this.seriesPaintMap);
         result = HashUtils.hashCode(result, this.defaultPaint);
         result = HashUtils.hashCode(result, this.seriesFillPaintMap);
@@ -2891,14 +2876,16 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     @Override
     protected Object clone() throws CloneNotSupportedException {
         AbstractRenderer clone = (AbstractRenderer) super.clone();
+		clone.abstractRendererProduct2 = (AbstractRendererProduct2) this.abstractRendererProduct2.clone();
 		clone.abstractRendererProduct = (AbstractRendererProduct) this.abstractRendererProduct.clone();
 
         if (this.seriesVisibleMap != null) {
             clone.seriesVisibleMap = new HashMap<>(this.seriesVisibleMap);
         }
 
-        if (this.seriesVisibleInLegendMap != null) {
-            clone.seriesVisibleInLegendMap = new HashMap<>(this.seriesVisibleInLegendMap);
+        if (this.abstractRendererProduct2.getSeriesVisibleInLegendMap() != null) {
+            clone.abstractRendererProduct2.setSeriesVisibleInLegendMap(
+					new HashMap<>(this.abstractRendererProduct2.getSeriesVisibleInLegendMap()));
         }
 
         // 'paint' : immutable, no need to clone reference
