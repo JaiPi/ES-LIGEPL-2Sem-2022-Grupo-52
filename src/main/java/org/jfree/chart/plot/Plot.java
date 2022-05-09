@@ -108,7 +108,9 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         DatasetChangeListener, AnnotationChangeListener, MarkerChangeListener,
         LegendItemSource, PublicCloneable, Cloneable, Serializable {
 
-    private PlotProduct plotProduct = new PlotProduct();
+    private transient PlotProduct2 plotProduct2 = new PlotProduct2();
+
+	private PlotProduct plotProduct = new PlotProduct();
 
 	/** For serialization. */
     private static final long serialVersionUID = -8831571430103671324L;
@@ -195,9 +197,6 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
     /** The drawing supplier. */
     private DrawingSupplier drawingSupplier;
 
-    /** Storage for registered change listeners. */
-    private transient EventListenerList listenerList;
-
     /**
      * A flag that controls whether or not the plot will notify listeners
      * of changes (defaults to true, but sometimes it is useful to disable
@@ -227,7 +226,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         this.drawingSupplier = new DefaultDrawingSupplier();
 
         this.notify = true;
-        this.listenerList = new EventListenerList();
+        plotProduct2.setListenerList(new EventListenerList());
     }
     
     /**
@@ -821,11 +820,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #isNotify()
      */
     public void setNotify(boolean notify) {
-        this.notify = notify;
-        // if the flag is being set to true, there may be queued up changes...
-        if (notify) {
-            notifyListeners(new PlotChangeEvent(this));
-        }
+        plotProduct2.setNotify(notify, this);
     }
 
     /**
@@ -836,7 +831,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #removeChangeListener(PlotChangeListener)
      */
     public void addChangeListener(PlotChangeListener listener) {
-        this.listenerList.add(PlotChangeListener.class, listener);
+        plotProduct2.addChangeListener(listener);
     }
 
     /**
@@ -847,7 +842,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @see #addChangeListener(PlotChangeListener)
      */
     public void removeChangeListener(PlotChangeListener listener) {
-        this.listenerList.remove(PlotChangeListener.class, listener);
+        plotProduct2.removeChangeListener(listener);
     }
 
     /**
@@ -856,24 +851,14 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      * @param event  information about the change event.
      */
     public void notifyListeners(PlotChangeEvent event) {
-        // if the 'notify' flag has been switched to false, we don't notify
-        // the listeners
-        if (!this.notify) {
-            return;
-        }
-        Object[] listeners = this.listenerList.getListenerList();
-        for (int i = listeners.length - 2; i >= 0; i -= 2) {
-            if (listeners[i] == PlotChangeListener.class) {
-                ((PlotChangeListener) listeners[i + 1]).plotChanged(event);
-            }
-        }
+        plotProduct2.notifyListeners(event, this);
     }
 
     /**
      * Sends a {@link PlotChangeEvent} to all registered listeners.
      */
     protected void fireChangeEvent() {
-        notifyListeners(new PlotChangeEvent(this));
+        plotProduct2.notifyListeners(new PlotChangeEvent(this), this);
     }
 
     /**
@@ -1114,7 +1099,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
     public void datasetChanged(DatasetChangeEvent event) {
         PlotChangeEvent newEvent = new PlotChangeEvent(this);
         newEvent.setType(ChartChangeEventType.DATASET_UPDATED);
-        notifyListeners(newEvent);
+        plotProduct2.notifyListeners(newEvent, this);
     }
 
     /**
@@ -1252,11 +1237,12 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
     @Override
     public Object clone() throws CloneNotSupportedException {
         Plot clone = (Plot) super.clone();
+		clone.plotProduct2 = (PlotProduct2) this.plotProduct2.clone();
 		clone.plotProduct = (PlotProduct) this.plotProduct.clone();
         // private Plot parent <-- don't clone the parent plot, but take care
         // childs in combined plots instead
         clone.drawingSupplier = CloneUtils.clone(this.drawingSupplier);
-        clone.listenerList = new EventListenerList();
+        clone.plotProduct2.setListenerList(new EventListenerList());
         return clone;
     }
 
@@ -1269,6 +1255,7 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
      */
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
+		stream.writeObject(this.plotProduct2);
         SerialUtils.writePaint(this.noDataMessagePaint, stream);
         SerialUtils.writeStroke(this.outlineStroke, stream);
         SerialUtils.writePaint(this.outlinePaint, stream);
@@ -1287,13 +1274,14 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
     private void readObject(ObjectInputStream stream)
         throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
+		this.plotProduct2 = (PlotProduct2) stream.readObject();
         this.noDataMessagePaint = SerialUtils.readPaint(stream);
         this.outlineStroke = SerialUtils.readStroke(stream);
         this.outlinePaint = SerialUtils.readPaint(stream);
         // backgroundImage
         this.backgroundPaint = SerialUtils.readPaint(stream);
 
-        this.listenerList = new EventListenerList();
+        plotProduct2.setListenerList(new EventListenerList());
 
     }
 
@@ -1407,5 +1395,9 @@ public abstract class Plot implements ChartElement, AxisChangeListener,
         return result;
 
     }
+
+	public void setNotify2(boolean notify) {
+		this.notify = notify;
+	}
 
 }
