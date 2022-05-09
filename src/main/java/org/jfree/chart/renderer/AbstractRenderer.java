@@ -95,7 +95,9 @@ import org.jfree.data.ItemKey;
  */
 public abstract class AbstractRenderer implements ChartElement, Cloneable, Serializable {
 
-    private AbstractRendererProduct3 abstractRendererProduct3 = new AbstractRendererProduct3();
+    private transient AbstractRendererProduct4 abstractRendererProduct4 = new AbstractRendererProduct4();
+
+	private AbstractRendererProduct3 abstractRendererProduct3 = new AbstractRendererProduct3();
 
 	private AbstractRendererProduct2 abstractRendererProduct2 = new AbstractRendererProduct2();
 
@@ -283,9 +285,6 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     /** The default radius for the entity 'hotspot' */
     private int defaultEntityRadius;
 
-    /** Storage for registered change listeners. */
-    private transient EventListenerList listenerList;
-
     /** An event for re-use. */
     private transient RendererChangeEvent event;
 
@@ -356,7 +355,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         this.legendTextPaints = new HashMap<>();
         this.defaultLegendTextPaint = null;
 
-        this.listenerList = new EventListenerList();
+        abstractRendererProduct4.setListenerList(new EventListenerList());
     }
 
     /**
@@ -478,7 +477,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
             // the event) that series visibility has changed so the axis
             // ranges might need updating...
             RendererChangeEvent e = new RendererChangeEvent(this, true);
-            notifyListeners(e);
+            abstractRendererProduct4.notifyListeners(e);
         }
     }
 
@@ -2457,7 +2456,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setDataBoundsIncludesVisibleSeriesOnly(boolean visibleOnly) {
         this.dataBoundsIncludesVisibleSeriesOnly = visibleOnly;
-        notifyListeners(new RendererChangeEvent(this, true));
+        abstractRendererProduct4.notifyListeners(new RendererChangeEvent(this, true));
     }
 
     /** The adjacent offset. */
@@ -2598,8 +2597,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #removeChangeListener(RendererChangeListener)
      */
     public void addChangeListener(RendererChangeListener listener) {
-        Args.nullNotPermitted(listener, "listener");
-        this.listenerList.add(RendererChangeListener.class, listener);
+        abstractRendererProduct4.addChangeListener(listener);
     }
 
     /**
@@ -2611,8 +2609,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #addChangeListener(RendererChangeListener)
      */
     public void removeChangeListener(RendererChangeListener listener) {
-        Args.nullNotPermitted(listener, "listener");
-        this.listenerList.remove(RendererChangeListener.class, listener);
+        abstractRendererProduct4.removeChangeListener(listener);
     }
 
     /**
@@ -2625,15 +2622,14 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @return A boolean.
      */
     public boolean hasListener(EventListener listener) {
-        List<Object> list = Arrays.asList(this.listenerList.getListenerList());
-        return list.contains(listener);
+        return abstractRendererProduct4.hasListener(listener);
     }
 
     /**
      * Sends a {@link RendererChangeEvent} to all registered listeners.
      */
     protected void fireChangeEvent() {
-        notifyListeners(new RendererChangeEvent(this));
+        abstractRendererProduct4.notifyListeners(new RendererChangeEvent(this));
     }
 
     /**
@@ -2642,12 +2638,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @param event  information about the change event.
      */
     public void notifyListeners(RendererChangeEvent event) {
-        Object[] ls = this.listenerList.getListenerList();
-        for (int i = ls.length - 2; i >= 0; i -= 2) {
-            if (ls[i] == RendererChangeListener.class) {
-                ((RendererChangeListener) ls[i + 1]).rendererChanged(event);
-            }
-        }
+        abstractRendererProduct4.notifyListeners(event);
     }
 
     /**
@@ -2859,6 +2850,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     @Override
     protected Object clone() throws CloneNotSupportedException {
         AbstractRenderer clone = (AbstractRenderer) super.clone();
+		clone.abstractRendererProduct4 = (AbstractRendererProduct4) this.abstractRendererProduct4.clone();
 		clone.abstractRendererProduct3 = (AbstractRendererProduct3) this.abstractRendererProduct3.clone();
 		clone.abstractRendererProduct2 = (AbstractRendererProduct2) this.abstractRendererProduct2.clone();
 		clone.abstractRendererProduct = (AbstractRendererProduct) this.abstractRendererProduct.clone();
@@ -2948,7 +2940,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         if (this.legendTextPaints != null) {
             clone.legendTextPaints = new HashMap<>(this.legendTextPaints);
         }
-        clone.listenerList = new EventListenerList();
+        clone.abstractRendererProduct4.setListenerList(new EventListenerList());
         clone.event = null;
         return clone;
     }
@@ -2962,6 +2954,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
+		stream.writeObject(this.abstractRendererProduct4);
         SerialUtils.writeMapOfPaint(this.seriesPaintMap, stream);
         SerialUtils.writePaint(this.defaultPaint, stream);
         SerialUtils.writeMapOfPaint(this.seriesFillPaintMap, stream);
@@ -2990,6 +2983,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     private void readObject(ObjectInputStream stream) throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
+		this.abstractRendererProduct4 = (AbstractRendererProduct4) stream.readObject();
         this.seriesPaintMap = SerialUtils.readMapOfPaint(stream);
         this.defaultPaint = SerialUtils.readPaint(stream);
         this.seriesFillPaintMap = SerialUtils.readMapOfPaint(stream);
@@ -3009,7 +3003,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
 
         // listeners are not restored automatically, but storage must be
         // provided...
-        this.listenerList = new EventListenerList();
+        abstractRendererProduct4.setListenerList(new EventListenerList());
     }
 
 }
