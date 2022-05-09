@@ -95,7 +95,9 @@ import org.jfree.data.ItemKey;
  */
 public abstract class AbstractRenderer implements ChartElement, Cloneable, Serializable {
 
-    /** For serialization. */
+    private AbstractRendererProduct abstractRendererProduct = new AbstractRendererProduct();
+
+	/** For serialization. */
     private static final long serialVersionUID = -828267569428206075L;
 
     /** Zero represented as a {@code double}. */
@@ -235,12 +237,6 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     /** The fallback positive item label position. */
     private ItemLabelPosition defaultPositiveItemLabelPosition;
 
-    /** The negative item label position (per series). */
-    private Map<Integer, ItemLabelPosition> negativeItemLabelPositionMap;
-
-    /** The fallback negative item label position. */
-    private ItemLabelPosition defaultNegativeItemLabelPosition;
-
     /** The item label anchor offset. */
     private double itemLabelAnchorOffset = 2.0;
 
@@ -351,9 +347,9 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
         this.defaultPositiveItemLabelPosition = new ItemLabelPosition(
                 ItemLabelAnchor.OUTSIDE12, TextAnchor.BOTTOM_CENTER);
 
-        this.negativeItemLabelPositionMap = new HashMap<>();
-        this.defaultNegativeItemLabelPosition = new ItemLabelPosition(
-                ItemLabelAnchor.OUTSIDE6, TextAnchor.TOP_CENTER);
+        abstractRendererProduct.setNegativeItemLabelPositionMap(new HashMap<>());
+        abstractRendererProduct.setDefaultNegativeItemLabelPosition2(
+				new ItemLabelPosition(ItemLabelAnchor.OUTSIDE6, TextAnchor.TOP_CENTER));
 
         this.seriesCreateEntitiesMap = new HashMap<>();
         this.defaultCreateEntities = true;
@@ -2027,7 +2023,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #getPositiveItemLabelPosition(int, int)
      */
     public ItemLabelPosition getNegativeItemLabelPosition(int row, int column) {
-        return getSeriesNegativeItemLabelPosition(row);
+        return abstractRendererProduct.getSeriesNegativeItemLabelPosition(row);
     }
 
     /**
@@ -2040,13 +2036,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #setSeriesNegativeItemLabelPosition(int, ItemLabelPosition)
      */
     public ItemLabelPosition getSeriesNegativeItemLabelPosition(int series) {
-        // otherwise look up the position list
-        ItemLabelPosition position 
-                = this.negativeItemLabelPositionMap.get(series);
-        if (position == null) {
-            position = this.defaultNegativeItemLabelPosition;
-        }
-        return position;
+        return abstractRendererProduct.getSeriesNegativeItemLabelPosition(series);
     }
 
     /**
@@ -2060,7 +2050,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setSeriesNegativeItemLabelPosition(int series,
                                                    ItemLabelPosition position) {
-        setSeriesNegativeItemLabelPosition(series, position, true);
+        abstractRendererProduct.setSeriesNegativeItemLabelPosition(series, position, true, this);
     }
 
     /**
@@ -2076,10 +2066,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setSeriesNegativeItemLabelPosition(int series,
             ItemLabelPosition position, boolean notify) {
-        this.negativeItemLabelPositionMap.put(series, position);
-        if (notify) {
-            fireChangeEvent();
-        }
+        abstractRendererProduct.setSeriesNegativeItemLabelPosition(series, position, notify, this);
     }
 
     /**
@@ -2090,7 +2077,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      * @see #setDefaultNegativeItemLabelPosition(ItemLabelPosition)
      */
     public ItemLabelPosition getDefaultNegativeItemLabelPosition() {
-        return this.defaultNegativeItemLabelPosition;
+        return this.abstractRendererProduct.getDefaultNegativeItemLabelPosition();
     }
 
     /**
@@ -2103,7 +2090,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setDefaultNegativeItemLabelPosition(
             ItemLabelPosition position) {
-        setDefaultNegativeItemLabelPosition(position, true);
+        abstractRendererProduct.setDefaultNegativeItemLabelPosition(position, true, this);
     }
 
     /**
@@ -2117,11 +2104,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
      */
     public void setDefaultNegativeItemLabelPosition(ItemLabelPosition position,
             boolean notify) {
-        Args.nullNotPermitted(position, "position");
-        this.defaultNegativeItemLabelPosition = position;
-        if (notify) {
-            fireChangeEvent();
-        }
+        abstractRendererProduct.setDefaultNegativeItemLabelPosition(position, notify, this);
     }
 
     /**
@@ -2820,10 +2803,10 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
             return false;
         }
 
-        if (!Objects.equals(this.negativeItemLabelPositionMap, that.negativeItemLabelPositionMap)) {
+        if (!Objects.equals(this.abstractRendererProduct.getNegativeItemLabelPositionMap(), that.abstractRendererProduct.getNegativeItemLabelPositionMap())) {
             return false;
         }
-        if (!Objects.equals(this.defaultNegativeItemLabelPosition, that.defaultNegativeItemLabelPosition)) {
+        if (!Objects.equals(this.abstractRendererProduct.getDefaultNegativeItemLabelPosition(), that.abstractRendererProduct.getDefaultNegativeItemLabelPosition())) {
             return false;
         }
         if (this.itemLabelAnchorOffset != that.itemLabelAnchorOffset) {
@@ -2908,6 +2891,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     @Override
     protected Object clone() throws CloneNotSupportedException {
         AbstractRenderer clone = (AbstractRenderer) super.clone();
+		clone.abstractRendererProduct = (AbstractRendererProduct) this.abstractRendererProduct.clone();
 
         if (this.seriesVisibleMap != null) {
             clone.seriesVisibleMap = new HashMap<>(this.seriesVisibleMap);
@@ -2973,9 +2957,9 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
                     = new HashMap<>(this.positiveItemLabelPositionMap);
         }
 
-        if (this.negativeItemLabelPositionMap != null) {
-            clone.negativeItemLabelPositionMap 
-                    = new HashMap<>(this.negativeItemLabelPositionMap);
+        if (this.abstractRendererProduct.getNegativeItemLabelPositionMap() != null) {
+            clone.abstractRendererProduct.setNegativeItemLabelPositionMap(
+					new HashMap<>(this.abstractRendererProduct.getNegativeItemLabelPositionMap()));
         }
 
         if (this.seriesCreateEntitiesMap != null) {
