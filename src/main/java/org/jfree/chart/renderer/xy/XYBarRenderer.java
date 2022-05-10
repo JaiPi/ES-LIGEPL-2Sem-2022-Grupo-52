@@ -89,7 +89,9 @@ import org.jfree.data.xy.XYDataset;
 public class XYBarRenderer extends AbstractXYItemRenderer
         implements XYItemRenderer, Cloneable, PublicCloneable, Serializable {
 
-    /** For serialization. */
+    private XYBarRendererProduct xYBarRendererProduct = new XYBarRendererProduct();
+
+	/** For serialization. */
     private static final long serialVersionUID = 770559577251370036L;
 
     /**
@@ -229,16 +231,6 @@ public class XYBarRenderer extends AbstractXYItemRenderer
     private boolean shadowsVisible;
 
     /**
-     * The x-offset for the shadow effect.
-     */
-    private double shadowXOffset;
-
-    /**
-     * The y-offset for the shadow effect.
-     */
-    private double shadowYOffset;
-
-    /**
      * A factor used to align the bars about the x-value.
      */
     private double barAlignmentFactor;
@@ -265,8 +257,8 @@ public class XYBarRenderer extends AbstractXYItemRenderer
         this.legendBar = new Rectangle2D.Double(-3.0, -5.0, 6.0, 10.0);
         this.barPainter = getDefaultBarPainter();
         this.shadowsVisible = getDefaultShadowsVisible();
-        this.shadowXOffset = 4.0;
-        this.shadowYOffset = 4.0;
+        xYBarRendererProduct.setShadowXOffset2(4.0);
+        xYBarRendererProduct.setShadowYOffset2(4.0);
         this.barAlignmentFactor = -1.0;
     }
 
@@ -528,7 +520,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * @return The shadow x-offset.
      */
     public double getShadowXOffset() {
-        return this.shadowXOffset;
+        return this.xYBarRendererProduct.getShadowXOffset();
     }
 
     /**
@@ -538,8 +530,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * @param offset  the offset.
      */
     public void setShadowXOffset(double offset) {
-        this.shadowXOffset = offset;
-        fireChangeEvent();
+        xYBarRendererProduct.setShadowXOffset(offset, this);
     }
 
     /**
@@ -548,7 +539,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * @return The shadow y-offset.
      */
     public double getShadowYOffset() {
-        return this.shadowYOffset;
+        return this.xYBarRendererProduct.getShadowYOffset();
     }
 
     /**
@@ -558,8 +549,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * @param offset  the offset.
      */
     public void setShadowYOffset(double offset) {
-        this.shadowYOffset = offset;
-        fireChangeEvent();
+        xYBarRendererProduct.setShadowYOffset(offset, this);
     }
 
     /**
@@ -1090,6 +1080,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
     @Override
     public Object clone() throws CloneNotSupportedException {
         XYBarRenderer result = (XYBarRenderer) super.clone();
+		result.xYBarRendererProduct = (XYBarRendererProduct) this.xYBarRendererProduct.clone();
         if (this.gradientPaintTransformer != null) {
             result.gradientPaintTransformer = CloneUtils.clone(this.gradientPaintTransformer);
         }
@@ -1143,10 +1134,10 @@ public class XYBarRenderer extends AbstractXYItemRenderer
         if (this.shadowsVisible != that.shadowsVisible) {
             return false;
         }
-        if (this.shadowXOffset != that.shadowXOffset) {
+        if (this.xYBarRendererProduct.getShadowXOffset() != that.xYBarRendererProduct.getShadowXOffset()) {
             return false;
         }
-        if (this.shadowYOffset != that.shadowYOffset) {
+        if (this.xYBarRendererProduct.getShadowYOffset() != that.xYBarRendererProduct.getShadowYOffset()) {
             return false;
         }
         if (this.barAlignmentFactor != that.barAlignmentFactor) {
