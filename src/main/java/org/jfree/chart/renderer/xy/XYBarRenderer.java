@@ -89,7 +89,9 @@ import org.jfree.data.xy.XYDataset;
 public class XYBarRenderer extends AbstractXYItemRenderer
         implements XYItemRenderer, Cloneable, PublicCloneable, Serializable {
 
-    private XYBarRendererProduct xYBarRendererProduct = new XYBarRendererProduct();
+    private XYBarRendererProduct2 xYBarRendererProduct2 = new XYBarRendererProduct2();
+
+	private XYBarRendererProduct xYBarRendererProduct = new XYBarRendererProduct();
 
 	/** For serialization. */
     private static final long serialVersionUID = 770559577251370036L;
@@ -207,18 +209,6 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * be {@code null}).
      */
     private transient Shape legendBar;
-
-    /**
-     * The fallback position if a positive item label doesn't fit inside the
-     * bar.
-     */
-    private ItemLabelPosition positiveItemLabelPositionFallback;
-
-    /**
-     * The fallback position if a negative item label doesn't fit inside the
-     * bar.
-     */
-    private ItemLabelPosition negativeItemLabelPositionFallback;
 
     /**
      * The bar painter (never {@code null}).
@@ -426,7 +416,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * @see #setPositiveItemLabelPositionFallback(ItemLabelPosition)
      */
     public ItemLabelPosition getPositiveItemLabelPositionFallback() {
-        return this.positiveItemLabelPositionFallback;
+        return this.xYBarRendererProduct2.getPositiveItemLabelPositionFallback();
     }
 
     /**
@@ -440,8 +430,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      */
     public void setPositiveItemLabelPositionFallback(
             ItemLabelPosition position) {
-        this.positiveItemLabelPositionFallback = position;
-        fireChangeEvent();
+        xYBarRendererProduct2.setPositiveItemLabelPositionFallback(position, this);
     }
 
     /**
@@ -453,7 +442,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      * @see #setNegativeItemLabelPositionFallback(ItemLabelPosition)
      */
     public ItemLabelPosition getNegativeItemLabelPositionFallback() {
-        return this.negativeItemLabelPositionFallback;
+        return this.xYBarRendererProduct2.getNegativeItemLabelPositionFallback();
     }
 
     /**
@@ -467,8 +456,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
      */
     public void setNegativeItemLabelPositionFallback(
             ItemLabelPosition position) {
-        this.negativeItemLabelPositionFallback = position;
-        fireChangeEvent();
+        xYBarRendererProduct2.setNegativeItemLabelPositionFallback(position, this);
     }
 
     /**
@@ -1080,6 +1068,7 @@ public class XYBarRenderer extends AbstractXYItemRenderer
     @Override
     public Object clone() throws CloneNotSupportedException {
         XYBarRenderer result = (XYBarRenderer) super.clone();
+		result.xYBarRendererProduct2 = (XYBarRendererProduct2) this.xYBarRendererProduct2.clone();
 		result.xYBarRendererProduct = (XYBarRendererProduct) this.xYBarRendererProduct.clone();
         if (this.gradientPaintTransformer != null) {
             result.gradientPaintTransformer = CloneUtils.clone(this.gradientPaintTransformer);
@@ -1122,10 +1111,10 @@ public class XYBarRenderer extends AbstractXYItemRenderer
         if (!ShapeUtils.equal(this.legendBar, that.legendBar)) {
             return false;
         }
-        if (!Objects.equals(this.positiveItemLabelPositionFallback, that.positiveItemLabelPositionFallback)) {
+        if (!Objects.equals(this.xYBarRendererProduct2.getPositiveItemLabelPositionFallback(), that.xYBarRendererProduct2.getPositiveItemLabelPositionFallback())) {
             return false;
         }
-        if (!Objects.equals(this.negativeItemLabelPositionFallback, that.negativeItemLabelPositionFallback)) {
+        if (!Objects.equals(this.xYBarRendererProduct2.getNegativeItemLabelPositionFallback(), that.xYBarRendererProduct2.getNegativeItemLabelPositionFallback())) {
             return false;
         }
         if (!this.barPainter.equals(that.barPainter)) {
