@@ -74,7 +74,9 @@ import java.util.*;
  */
 public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
 
-    private SpiderWebPlotProduct2 spiderWebPlotProduct2 = new SpiderWebPlotProduct2();
+    private SpiderWebPlotProduct3 spiderWebPlotProduct3 = new SpiderWebPlotProduct3();
+
+	private SpiderWebPlotProduct2 spiderWebPlotProduct2 = new SpiderWebPlotProduct2();
 
 	private SpiderWebPlotProduct spiderWebPlotProduct = new SpiderWebPlotProduct();
 
@@ -173,14 +175,8 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
     /** The default series outline stroke. */
     private transient Stroke defaultSeriesOutlineStroke;
 
-    /** The font used to display the category labels. */
-    private Font labelFont;
-
     /** The color used to draw the category labels. */
     private transient Paint labelPaint;
-
-    /** The label generator. */
-    private CategoryItemLabelGenerator labelGenerator;
 
     /**
      * Creates a default plot with no dataset.
@@ -234,9 +230,9 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         this.seriesOutlineStrokes = new HashMap<>();
         this.defaultSeriesOutlineStroke = DEFAULT_OUTLINE_STROKE;
 
-        this.labelFont = DEFAULT_LABEL_FONT;
+        spiderWebPlotProduct3.setLabelFont2(DEFAULT_LABEL_FONT);
         this.labelPaint = DEFAULT_LABEL_PAINT;
-        this.labelGenerator = new StandardCategoryItemLabelGenerator();
+        spiderWebPlotProduct3.setLabelGenerator2(new StandardCategoryItemLabelGenerator());
 
         this.legendItemShape = DEFAULT_LEGEND_ITEM_CIRCLE;
     }
@@ -747,7 +743,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setLabelFont(Font)
      */
     public Font getLabelFont() {
-        return this.labelFont;
+        return this.spiderWebPlotProduct3.getLabelFont();
     }
 
     /**
@@ -759,9 +755,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #getLabelFont()
      */
     public void setLabelFont(Font font) {
-        Args.nullNotPermitted(font, "font");
-        this.labelFont = font;
-        fireChangeEvent();
+        spiderWebPlotProduct3.setLabelFont(font, this);
     }
 
     /**
@@ -797,7 +791,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setLabelGenerator(CategoryItemLabelGenerator)
      */
     public CategoryItemLabelGenerator getLabelGenerator() {
-        return this.labelGenerator;
+        return this.spiderWebPlotProduct3.getLabelGenerator();
     }
 
     /**
@@ -809,8 +803,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #getLabelGenerator()
      */
     public void setLabelGenerator(CategoryItemLabelGenerator generator) {
-        Args.nullNotPermitted(generator, "generator");
-        this.labelGenerator = generator;
+        spiderWebPlotProduct3.setLabelGenerator(generator);
     }
 
     /**
@@ -1210,10 +1203,10 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         String label;
         if (this.dataExtractOrder == TableOrder.BY_ROW) {
             // if series are in rows, then the categories are the column keys
-            label = this.labelGenerator.generateColumnLabel(this.dataset, cat);
+            label = this.spiderWebPlotProduct3.getLabelGenerator().generateColumnLabel(this.dataset, cat);
         } else {
             // if series are in columns, then the categories are the row keys
-            label = this.labelGenerator.generateRowLabel(this.dataset, cat);
+            label = this.spiderWebPlotProduct3.getLabelGenerator().generateRowLabel(this.dataset, cat);
         }
 
         Rectangle2D labelBounds = getLabelFont().getStringBounds(label, frc);
@@ -1343,13 +1336,13 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         if (!this.defaultSeriesOutlineStroke.equals(that.defaultSeriesOutlineStroke)) {
             return false;
         }
-        if (!this.labelFont.equals(that.labelFont)) {
+        if (!this.spiderWebPlotProduct3.getLabelFont().equals(that.spiderWebPlotProduct3.getLabelFont())) {
             return false;
         }
         if (!PaintUtils.equal(this.labelPaint, that.labelPaint)) {
             return false;
         }
-        if (!this.labelGenerator.equals(that.labelGenerator)) {
+        if (!this.spiderWebPlotProduct3.getLabelGenerator().equals(that.spiderWebPlotProduct3.getLabelGenerator())) {
             return false;
         }
         if (!Objects.equals(this.spiderWebPlotProduct2.getToolTipGenerator(), that.spiderWebPlotProduct2.getToolTipGenerator())) {
@@ -1372,6 +1365,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
     @Override
     public Object clone() throws CloneNotSupportedException {
         SpiderWebPlot clone = (SpiderWebPlot) super.clone();
+		clone.spiderWebPlotProduct3 = (SpiderWebPlotProduct3) this.spiderWebPlotProduct3.clone();
 		clone.spiderWebPlotProduct2 = (SpiderWebPlotProduct2) this.spiderWebPlotProduct2.clone();
 		clone.spiderWebPlotProduct = (SpiderWebPlotProduct) this.spiderWebPlotProduct.clone();
         clone.legendItemShape = CloneUtils.clone(this.legendItemShape);
