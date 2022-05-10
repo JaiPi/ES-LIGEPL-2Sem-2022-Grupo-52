@@ -74,7 +74,9 @@ import java.util.*;
  */
 public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
 
-    /** For serialization. */
+    private SpiderWebPlotProduct spiderWebPlotProduct = new SpiderWebPlotProduct();
+
+	/** For serialization. */
     private static final long serialVersionUID = -5376340422031599463L;
 
     /** The default head radius percent (currently 1%). */
@@ -118,12 +120,6 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      *  the maximum from the data passed in
      */
     public static final double DEFAULT_MAX_VALUE = -1.0;
-
-    /** The head radius as a percentage of the available drawing area. */
-    protected double headPercent;
-
-    /** The space left around the outside of the plot as a percentage. */
-    private double interiorGap;
 
     /** The gap between the labels and the axes as a %age of the radius. */
     private double axisLabelGap;
@@ -226,12 +222,12 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         }
 
         this.dataExtractOrder = extract;
-        this.headPercent = DEFAULT_HEAD;
+        spiderWebPlotProduct.setHeadPercent2(DEFAULT_HEAD);
         this.axisLabelGap = DEFAULT_AXIS_LABEL_GAP;
         this.axisLinePaint = Color.BLACK;
         this.axisLineStroke = new BasicStroke(1.0f);
 
-        this.interiorGap = DEFAULT_INTERIOR_GAP;
+        spiderWebPlotProduct.setInteriorGap2(DEFAULT_INTERIOR_GAP);
         this.startAngle = DEFAULT_START_ANGLE;
         this.direction = Rotation.CLOCKWISE;
         this.maxValue = DEFAULT_MAX_VALUE;
@@ -359,7 +355,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setHeadPercent(double)
      */
     public double getHeadPercent() {
-        return this.headPercent;
+        return this.spiderWebPlotProduct.getHeadPercent();
     }
 
     /**
@@ -371,9 +367,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #getHeadPercent()
      */
     public void setHeadPercent(double percent) {
-        Args.requireNonNegative(percent, "percent");
-        this.headPercent = percent;
-        fireChangeEvent();
+        spiderWebPlotProduct.setHeadPercent(percent, this);
     }
 
     /**
@@ -466,7 +460,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setInteriorGap(double)
      */
     public double getInteriorGap() {
-        return this.interiorGap;
+        return this.spiderWebPlotProduct.getInteriorGap();
     }
 
     /**
@@ -479,14 +473,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #getInteriorGap()
      */
     public void setInteriorGap(double percent) {
-        if ((percent < 0.0) || (percent > MAX_INTERIOR_GAP)) {
-            throw new IllegalArgumentException(
-                    "Percentage outside valid range.");
-        }
-        if (this.interiorGap != percent) {
-            this.interiorGap = percent;
-            fireChangeEvent();
-        }
+        spiderWebPlotProduct.setInteriorGap(percent, this);
     }
 
     /**
@@ -1007,8 +994,8 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
             double W = area.getWidth() - gapHorizontal;
             double H = area.getHeight() - gapVertical;
 
-            double headW = area.getWidth() * this.headPercent;
-            double headH = area.getHeight() * this.headPercent;
+            double headW = area.getWidth() * this.spiderWebPlotProduct.getHeadPercent();
+            double headH = area.getHeight() * this.spiderWebPlotProduct.getHeadPercent();
 
             // make the chart area a square
             double min = Math.min(W, H) / 2;
@@ -1316,10 +1303,10 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         if (!this.dataExtractOrder.equals(that.dataExtractOrder)) {
             return false;
         }
-        if (this.headPercent != that.headPercent) {
+        if (this.spiderWebPlotProduct.getHeadPercent() != that.spiderWebPlotProduct.getHeadPercent()) {
             return false;
         }
-        if (this.interiorGap != that.interiorGap) {
+        if (this.spiderWebPlotProduct.getInteriorGap() != that.spiderWebPlotProduct.getInteriorGap()) {
             return false;
         }
         if (this.startAngle != that.startAngle) {
@@ -1395,6 +1382,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
     @Override
     public Object clone() throws CloneNotSupportedException {
         SpiderWebPlot clone = (SpiderWebPlot) super.clone();
+		clone.spiderWebPlotProduct = (SpiderWebPlotProduct) this.spiderWebPlotProduct.clone();
         clone.legendItemShape = CloneUtils.clone(this.legendItemShape);
         clone.seriesPaints = CloneUtils.cloneMapValues(this.seriesPaints);
         clone.seriesOutlinePaints = CloneUtils.cloneMapValues(this.seriesOutlinePaints);
