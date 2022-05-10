@@ -74,7 +74,9 @@ import java.util.*;
  */
 public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
 
-    private SpiderWebPlotProduct spiderWebPlotProduct = new SpiderWebPlotProduct();
+    private SpiderWebPlotProduct2 spiderWebPlotProduct2 = new SpiderWebPlotProduct2();
+
+	private SpiderWebPlotProduct spiderWebPlotProduct = new SpiderWebPlotProduct();
 
 	/** For serialization. */
     private static final long serialVersionUID = -5376340422031599463L;
@@ -179,15 +181,6 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
 
     /** The label generator. */
     private CategoryItemLabelGenerator labelGenerator;
-
-    /** controls if the web polygons are filled or not */
-    private boolean webFilled = true;
-
-    /** A tooltip generator for the plot ({@code null} permitted). */
-    private CategoryToolTipGenerator toolTipGenerator;
-
-    /** A URL generator for the plot ({@code null} permitted). */
-    private CategoryURLGenerator urlGenerator;
 
     /**
      * Creates a default plot with no dataset.
@@ -303,7 +296,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setWebFilled(boolean)
      */
     public boolean isWebFilled() {
-        return this.webFilled;
+        return this.spiderWebPlotProduct2.getWebFilled();
     }
 
     /**
@@ -315,8 +308,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #isWebFilled()
      */
     public void setWebFilled(boolean flag) {
-        this.webFilled = flag;
-        fireChangeEvent();
+        spiderWebPlotProduct2.setWebFilled(flag, this);
     }
 
     /**
@@ -829,7 +821,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setToolTipGenerator(CategoryToolTipGenerator)
      */
     public CategoryToolTipGenerator getToolTipGenerator() {
-        return this.toolTipGenerator;
+        return this.spiderWebPlotProduct2.getToolTipGenerator();
     }
 
     /**
@@ -841,8 +833,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #getToolTipGenerator()
      */
     public void setToolTipGenerator(CategoryToolTipGenerator generator) {
-        this.toolTipGenerator = generator;
-        fireChangeEvent();
+        spiderWebPlotProduct2.setToolTipGenerator(generator, this);
     }
 
     /**
@@ -853,7 +844,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #setURLGenerator(CategoryURLGenerator)
      */
     public CategoryURLGenerator getURLGenerator() {
-        return this.urlGenerator;
+        return this.spiderWebPlotProduct2.getUrlGenerator();
     }
 
     /**
@@ -865,8 +856,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
      * @see #getURLGenerator()
      */
     public void setURLGenerator(CategoryURLGenerator generator) {
-        this.urlGenerator = generator;
-        fireChangeEvent();
+        spiderWebPlotProduct2.setURLGenerator(generator, this);
     }
 
     /**
@@ -1136,14 +1126,14 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
                             col = series;
                         }
                         String tip = null;
-                        if (this.toolTipGenerator != null) {
-                            tip = this.toolTipGenerator.generateToolTip(
+                        if (this.spiderWebPlotProduct2.getToolTipGenerator() != null) {
+                            tip = this.spiderWebPlotProduct2.getToolTipGenerator().generateToolTip(
                                     this.dataset, row, col);
                         }
 
                         String url = null;
-                        if (this.urlGenerator != null) {
-                            url = this.urlGenerator.generateURL(this.dataset,
+                        if (this.spiderWebPlotProduct2.getUrlGenerator() != null) {
+                            url = this.spiderWebPlotProduct2.getUrlGenerator().generateURL(this.dataset,
                                    row, col);
                         }
 
@@ -1170,7 +1160,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
 
         // Lastly, fill the web polygon if this is required
 
-        if (this.webFilled) {
+        if (this.spiderWebPlotProduct2.getWebFilled()) {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
                     0.1f));
             g2.fill(polygon);
@@ -1318,7 +1308,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         if (this.maxValue != that.maxValue) {
             return false;
         }
-        if (this.webFilled != that.webFilled) {
+        if (this.spiderWebPlotProduct2.getWebFilled() != that.spiderWebPlotProduct2.getWebFilled()) {
             return false;
         }
         if (this.axisLabelGap != that.axisLabelGap) {
@@ -1362,10 +1352,10 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         if (!this.labelGenerator.equals(that.labelGenerator)) {
             return false;
         }
-        if (!Objects.equals(this.toolTipGenerator, that.toolTipGenerator)) {
+        if (!Objects.equals(this.spiderWebPlotProduct2.getToolTipGenerator(), that.spiderWebPlotProduct2.getToolTipGenerator())) {
             return false;
         }
-        if (!Objects.equals(this.urlGenerator, that.urlGenerator)) {
+        if (!Objects.equals(this.spiderWebPlotProduct2.getUrlGenerator(), that.spiderWebPlotProduct2.getUrlGenerator())) {
             return false;
         }
         return true;
@@ -1382,6 +1372,7 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
     @Override
     public Object clone() throws CloneNotSupportedException {
         SpiderWebPlot clone = (SpiderWebPlot) super.clone();
+		clone.spiderWebPlotProduct2 = (SpiderWebPlotProduct2) this.spiderWebPlotProduct2.clone();
 		clone.spiderWebPlotProduct = (SpiderWebPlotProduct) this.spiderWebPlotProduct.clone();
         clone.legendItemShape = CloneUtils.clone(this.legendItemShape);
         clone.seriesPaints = CloneUtils.cloneMapValues(this.seriesPaints);
