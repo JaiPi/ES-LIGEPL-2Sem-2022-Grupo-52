@@ -87,7 +87,11 @@ import org.jfree.data.general.ValueDataset;
  */
 public class MeterPlot extends Plot implements Serializable, Cloneable {
 
-    /** For serialization. */
+    private MeterPlotProduct2 meterPlotProduct2 = new MeterPlotProduct2();
+
+	private MeterPlotProduct meterPlotProduct = new MeterPlotProduct();
+
+	/** For serialization. */
     private static final long serialVersionUID = 2987472457734470962L;
 
     /** The default background paint. */
@@ -118,53 +122,8 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
     /** The dataset (contains a single value). */
     private ValueDataset dataset;
 
-    /** The dial shape (background shape). */
-    private DialShape shape;
-
-    /** The dial extent (measured in degrees). */
-    private int meterAngle;
-
-    /** The overall range of data values on the dial. */
-    private Range range;
-
     /** The tick size. */
     private double tickSize;
-
-    /** The paint used to draw the ticks. */
-    private transient Paint tickPaint;
-
-    /** The units displayed on the dial. */
-    private String units;
-
-    /** The font for the value displayed in the center of the dial. */
-    private Font valueFont;
-
-    /** The paint for the value displayed in the center of the dial. */
-    private transient Paint valuePaint;
-
-    /** A flag that indicates whether the value is visible. */
-    private boolean valueVisible = true;
-
-    /** A flag that controls whether or not the border is drawn. */
-    private boolean drawBorder;
-
-    /** The outline paint. */
-    private transient Paint dialOutlinePaint;
-
-    /** The paint for the dial background. */
-    private transient Paint dialBackgroundPaint;
-
-    /** The paint for the needle. */
-    private transient Paint needlePaint;
-
-    /** A flag that controls whether or not the tick labels are visible. */
-    private boolean tickLabelsVisible;
-
-    /** The tick label font. */
-    private Font tickLabelFont;
-
-    /** The tick label paint. */
-    private transient Paint tickLabelPaint;
 
     /** The tick label format. */
     private NumberFormat tickLabelFormat;
@@ -194,20 +153,20 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      */
     public MeterPlot(ValueDataset dataset) {
         super();
-        this.shape = DialShape.CIRCLE;
-        this.meterAngle = DEFAULT_METER_ANGLE;
-        this.range = new Range(0.0, 100.0);
+        meterPlotProduct2.setShape(DialShape.CIRCLE);
+        meterPlotProduct2.setMeterAngle2(DEFAULT_METER_ANGLE);
+        meterPlotProduct2.setRange2(new Range(0.0, 100.0));
         this.tickSize = 10.0;
-        this.tickPaint = Color.WHITE;
-        this.units = "Units";
-        this.needlePaint = MeterPlot.DEFAULT_NEEDLE_PAINT;
-        this.tickLabelsVisible = true;
-        this.tickLabelFont = MeterPlot.DEFAULT_LABEL_FONT;
-        this.tickLabelPaint = Color.BLACK;
+        meterPlotProduct.setTickPaint2(Color.WHITE);
+        meterPlotProduct.setUnits2("Units");
+        meterPlotProduct.setNeedlePaint2(MeterPlot.DEFAULT_NEEDLE_PAINT);
+        meterPlotProduct.setTickLabelsVisible2(true);
+        meterPlotProduct.setTickLabelFont2(MeterPlot.DEFAULT_LABEL_FONT);
+        meterPlotProduct.setTickLabelPaint2(Color.BLACK);
         this.tickLabelFormat = NumberFormat.getInstance();
-        this.valueFont = MeterPlot.DEFAULT_VALUE_FONT;
-        this.valuePaint = MeterPlot.DEFAULT_VALUE_PAINT;
-        this.dialBackgroundPaint = MeterPlot.DEFAULT_DIAL_BACKGROUND_PAINT;
+        meterPlotProduct.setValueFont2(MeterPlot.DEFAULT_VALUE_FONT);
+        meterPlotProduct.setValuePaint2(MeterPlot.DEFAULT_VALUE_PAINT);
+        meterPlotProduct.setDialBackgroundPaint2(MeterPlot.DEFAULT_DIAL_BACKGROUND_PAINT);
         this.intervals = new ArrayList<>();
         setDataset(dataset);
     }
@@ -220,7 +179,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setDialShape(DialShape)
      */
     public DialShape getDialShape() {
-        return this.shape;
+        return this.meterPlotProduct2.getShape();
     }
 
     /**
@@ -232,9 +191,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getDialShape()
      */
     public void setDialShape(DialShape shape) {
-        Args.nullNotPermitted(shape, "shape");
-        this.shape = shape;
-        fireChangeEvent();
+        meterPlotProduct2.setDialShape(shape, this);
     }
 
     /**
@@ -246,7 +203,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setMeterAngle(int)
      */
     public int getMeterAngle() {
-        return this.meterAngle;
+        return this.meterPlotProduct2.getMeterAngle();
     }
 
     /**
@@ -258,12 +215,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getMeterAngle()
      */
     public void setMeterAngle(int angle) {
-        if (angle < 1 || angle > 360) {
-            throw new IllegalArgumentException("Invalid 'angle' (" + angle
-                    + ")");
-        }
-        this.meterAngle = angle;
-        fireChangeEvent();
+        meterPlotProduct2.setMeterAngle(angle, this);
     }
 
     /**
@@ -274,7 +226,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setRange(Range)
      */
     public Range getRange() {
-        return this.range;
+        return this.meterPlotProduct2.getRange();
     }
 
     /**
@@ -287,13 +239,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getRange()
      */
     public void setRange(Range range) {
-        Args.nullNotPermitted(range, "range");
-        if (!(range.getLength() > 0.0)) {
-            throw new IllegalArgumentException(
-                    "Range length must be positive.");
-        }
-        this.range = range;
-        fireChangeEvent();
+        meterPlotProduct2.setRange(range, this);
     }
 
     /**
@@ -332,7 +278,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setTickPaint(Paint)
      */
     public Paint getTickPaint() {
-        return this.tickPaint;
+        return this.meterPlotProduct.getTickPaint();
     }
 
     /**
@@ -344,9 +290,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getTickPaint()
      */
     public void setTickPaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        this.tickPaint = paint;
-        fireChangeEvent();
+        meterPlotProduct.setTickPaint(paint, this);
     }
 
     /**
@@ -357,7 +301,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setUnits(String)
      */
     public String getUnits() {
-        return this.units;
+        return this.meterPlotProduct.getUnits();
     }
 
     /**
@@ -369,8 +313,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getUnits()
      */
     public void setUnits(String units) {
-        this.units = units;
-        fireChangeEvent();
+        meterPlotProduct.setUnits(units, this);
     }
 
     /**
@@ -381,7 +324,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setNeedlePaint(Paint)
      */
     public Paint getNeedlePaint() {
-        return this.needlePaint;
+        return this.meterPlotProduct.getNeedlePaint();
     }
 
     /**
@@ -393,9 +336,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getNeedlePaint()
      */
     public void setNeedlePaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        this.needlePaint = paint;
-        fireChangeEvent();
+        meterPlotProduct.setNeedlePaint(paint, this);
     }
 
     /**
@@ -406,7 +347,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setTickLabelsVisible(boolean)
      */
     public boolean getTickLabelsVisible() {
-        return this.tickLabelsVisible;
+        return this.meterPlotProduct.getTickLabelsVisible();
     }
 
     /**
@@ -418,10 +359,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getTickLabelsVisible()
      */
     public void setTickLabelsVisible(boolean visible) {
-        if (this.tickLabelsVisible != visible) {
-            this.tickLabelsVisible = visible;
-            fireChangeEvent();
-        }
+        meterPlotProduct.setTickLabelsVisible(visible, this);
     }
 
     /**
@@ -432,7 +370,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setTickLabelFont(Font)
      */
     public Font getTickLabelFont() {
-        return this.tickLabelFont;
+        return this.meterPlotProduct.getTickLabelFont();
     }
 
     /**
@@ -444,11 +382,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getTickLabelFont()
      */
     public void setTickLabelFont(Font font) {
-        Args.nullNotPermitted(font, "font");
-        if (!this.tickLabelFont.equals(font)) {
-            this.tickLabelFont = font;
-            fireChangeEvent();
-        }
+        meterPlotProduct.setTickLabelFont(font, this);
     }
 
     /**
@@ -459,7 +393,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setTickLabelPaint(Paint)
      */
     public Paint getTickLabelPaint() {
-        return this.tickLabelPaint;
+        return this.meterPlotProduct.getTickLabelPaint();
     }
 
     /**
@@ -471,11 +405,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getTickLabelPaint()
      */
     public void setTickLabelPaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        if (!this.tickLabelPaint.equals(paint)) {
-            this.tickLabelPaint = paint;
-            fireChangeEvent();
-        }
+        meterPlotProduct.setTickLabelPaint(paint, this);
     }
 
     /**
@@ -488,7 +418,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @since 1.5.4
      */
     public boolean isValueVisible() {
-        return valueVisible;
+        return meterPlotProduct.getValueVisible();
     }
 
     /**
@@ -501,8 +431,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @since 1.5.4
      */
     public void setValueVisible(boolean valueVisible) {
-        this.valueVisible = valueVisible;
-        fireChangeEvent();
+        meterPlotProduct.setValueVisible(valueVisible, this);
     }
 
     /**
@@ -538,7 +467,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setValueFont(Font)
      */
     public Font getValueFont() {
-        return this.valueFont;
+        return this.meterPlotProduct.getValueFont();
     }
 
     /**
@@ -550,9 +479,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getValueFont()
      */
     public void setValueFont(Font font) {
-        Args.nullNotPermitted(font, "font");
-        this.valueFont = font;
-        fireChangeEvent();
+        meterPlotProduct.setValueFont(font, this);
     }
 
     /**
@@ -563,7 +490,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setValuePaint(Paint)
      */
     public Paint getValuePaint() {
-        return this.valuePaint;
+        return this.meterPlotProduct.getValuePaint();
     }
 
     /**
@@ -575,9 +502,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getValuePaint()
      */
     public void setValuePaint(Paint paint) {
-        Args.nullNotPermitted(paint, "paint");
-        this.valuePaint = paint;
-        fireChangeEvent();
+        meterPlotProduct.setValuePaint(paint, this);
     }
 
     /**
@@ -588,7 +513,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setDialBackgroundPaint(Paint)
      */
     public Paint getDialBackgroundPaint() {
-        return this.dialBackgroundPaint;
+        return this.meterPlotProduct.getDialBackgroundPaint();
     }
 
     /**
@@ -600,8 +525,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getDialBackgroundPaint()
      */
     public void setDialBackgroundPaint(Paint paint) {
-        this.dialBackgroundPaint = paint;
-        fireChangeEvent();
+        meterPlotProduct.setDialBackgroundPaint(paint, this);
     }
 
     /**
@@ -613,7 +537,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setDrawBorder(boolean)
      */
     public boolean getDrawBorder() {
-        return this.drawBorder;
+        return this.meterPlotProduct2.getDrawBorder();
     }
 
     /**
@@ -626,9 +550,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getDrawBorder()
      */
     public void setDrawBorder(boolean draw) {
-        // TODO: fix output when this flag is set to true
-        this.drawBorder = draw;
-        fireChangeEvent();
+        meterPlotProduct2.setDrawBorder(draw, this);
     }
 
     /**
@@ -639,7 +561,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #setDialOutlinePaint(Paint)
      */
     public Paint getDialOutlinePaint() {
-        return this.dialOutlinePaint;
+        return this.meterPlotProduct.getDialOutlinePaint();
     }
 
     /**
@@ -651,8 +573,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @see #getDialOutlinePaint()
      */
     public void setDialOutlinePaint(Paint paint) {
-        this.dialOutlinePaint = paint;
-        fireChangeEvent();
+        meterPlotProduct.setDialOutlinePaint(paint, this);
     }
 
     /**
@@ -780,7 +701,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
                 area.getHeight() - 8);
 
         // draw the background
-        if (this.drawBorder) {
+        if (this.meterPlotProduct2.getDrawBorder()) {
             drawBackground(g2, area);
         }
 
@@ -791,7 +712,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
         double meterY = area.getY() + gapVertical / 2;
         double meterW = area.getWidth() - gapHorizontal;
         double meterH = area.getHeight() - gapVertical
-                + ((this.meterAngle <= 180) && (this.shape != DialShape.CIRCLE)
+                + ((this.meterPlotProduct2.getMeterAngle() <= 180) && (this.meterPlotProduct2.getShape() != DialShape.CIRCLE)
                 ? area.getHeight() / 1.25 : 0);
 
         double min = Math.min(meterW, meterH) / 2;
@@ -813,8 +734,8 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
         // plot the data (unless the dataset is null)...
         ValueDataset data = getDataset();
         if (data != null) {
-            double dataMin = this.range.getLowerBound();
-            double dataMax = this.range.getUpperBound();
+            double dataMin = this.meterPlotProduct2.getRange().getLowerBound();
+            double dataMax = this.meterPlotProduct2.getRange().getUpperBound();
 
             Shape savedClip = g2.getClip();
             g2.clip(originalArea);
@@ -822,13 +743,13 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
             g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
                     getForegroundAlpha()));
 
-            if (this.dialBackgroundPaint != null) {
-                fillArc(g2, originalArea, dataMin, dataMax,
-                        this.dialBackgroundPaint, true);
+            if (this.meterPlotProduct.getDialBackgroundPaint() != null) {
+                meterPlotProduct2.fillArc(g2, originalArea, dataMin, dataMax,
+                        this.meterPlotProduct.getDialBackgroundPaint(), true);
             }
             drawTicks(g2, meterArea, dataMin, dataMax);
-            drawArcForInterval(g2, meterArea, new MeterInterval("", this.range,
-                    this.dialOutlinePaint, new BasicStroke(1.0f), null));
+            drawArcForInterval(g2, meterArea, new MeterInterval("", this.meterPlotProduct2.getRange(),
+                    this.meterPlotProduct.getDialOutlinePaint(), new BasicStroke(1.0f), null));
 
             for (MeterInterval interval : this.intervals) {
                 drawArcForInterval(g2, meterArea, interval);
@@ -839,13 +760,13 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
                 double value = n.doubleValue();
                 drawValueLabel(g2, meterArea);
 
-                if (this.range.contains(value)) {
-                    g2.setPaint(this.needlePaint);
+                if (this.meterPlotProduct2.getRange().contains(value)) {
+                    g2.setPaint(this.meterPlotProduct.getNeedlePaint());
                     g2.setStroke(new BasicStroke(2.0f));
 
                     double radius = (meterArea.getWidth() / 2)
                                     + DEFAULT_BORDER_SIZE + 15;
-                    double valueAngle = valueToAngle(value);
+                    double valueAngle = meterPlotProduct2.valueToAngle(value);
                     double valueP1 = meterMiddleX
                             + (radius * Math.cos(Math.PI * (valueAngle / 180)));
                     double valueP2 = meterMiddleY
@@ -884,7 +805,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
             g2.setComposite(originalComposite);
 
         }
-        if (this.drawBorder) {
+        if (this.meterPlotProduct2.getDrawBorder()) {
             drawOutline(g2, area);
         }
 
@@ -907,7 +828,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
         Paint backgroundPaint = interval.getBackgroundPaint();
 
         if (backgroundPaint != null) {
-            fillArc(g2, meterArea, minValue, maxValue, backgroundPaint, false);
+            meterPlotProduct2.fillArc(g2, meterArea, minValue, maxValue, backgroundPaint, false);
         }
         if (outlinePaint != null) {
             if (outlineStroke != null) {
@@ -932,8 +853,8 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
     protected void drawArc(Graphics2D g2, Rectangle2D area, double minValue,
                            double maxValue, Paint paint, Stroke stroke) {
 
-        double startAngle = valueToAngle(maxValue);
-        double endAngle = valueToAngle(minValue);
+        double startAngle = meterPlotProduct2.valueToAngle(maxValue);
+        double endAngle = meterPlotProduct2.valueToAngle(minValue);
         double extent = endAngle - startAngle;
 
         double x = area.getX();
@@ -967,41 +888,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
     protected void fillArc(Graphics2D g2, Rectangle2D area,
             double minValue, double maxValue, Paint paint, boolean dial) {
 
-        Args.nullNotPermitted(paint, "paint");
-        double startAngle = valueToAngle(maxValue);
-        double endAngle = valueToAngle(minValue);
-        double extent = endAngle - startAngle;
-
-        double x = area.getX();
-        double y = area.getY();
-        double w = area.getWidth();
-        double h = area.getHeight();
-        int joinType = Arc2D.OPEN;
-        if (this.shape == DialShape.PIE) {
-            joinType = Arc2D.PIE;
-        }
-        else if (this.shape == DialShape.CHORD) {
-            if (dial && this.meterAngle > 180) {
-                joinType = Arc2D.CHORD;
-            }
-            else {
-                joinType = Arc2D.PIE;
-            }
-        }
-        else if (this.shape == DialShape.CIRCLE) {
-            joinType = Arc2D.PIE;
-            if (dial) {
-                extent = 360;
-            }
-        }
-        else {
-            throw new IllegalStateException("DialShape not recognised.");
-        }
-
-        g2.setPaint(paint);
-        Arc2D.Double arc = new Arc2D.Double(x, y, w, h, startAngle, extent,
-                joinType);
-        g2.fill(arc);
+        meterPlotProduct2.fillArc(g2, area, minValue, maxValue, paint, dial);
     }
 
     /**
@@ -1012,9 +899,7 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @return The angle on the dial.
      */
     public double valueToAngle(double value) {
-        value = value - this.range.getLowerBound();
-        double baseAngle = 180 + ((this.meterAngle - 180) / 2.0);
-        return baseAngle - ((value / this.range.getLength()) * this.meterAngle);
+        return meterPlotProduct2.valueToAngle(value);
     }
 
     /**
@@ -1055,12 +940,12 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
     protected void drawTick(Graphics2D g2, Rectangle2D meterArea,
                             double value, boolean label) {
 
-        double valueAngle = valueToAngle(value);
+        double valueAngle = meterPlotProduct2.valueToAngle(value);
 
         double meterMiddleX = meterArea.getCenterX();
         double meterMiddleY = meterArea.getCenterY();
 
-        g2.setPaint(this.tickPaint);
+        g2.setPaint(this.meterPlotProduct.getTickPaint());
         g2.setStroke(new BasicStroke(2.0f));
 
         double valueP2X;
@@ -1083,11 +968,11 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
                 valueP2Y);
         g2.draw(line);
 
-        if (this.tickLabelsVisible && label) {
+        if (this.meterPlotProduct.getTickLabelsVisible() && label) {
 
             String tickLabel =  this.tickLabelFormat.format(value);
-            g2.setFont(this.tickLabelFont);
-            g2.setPaint(this.tickLabelPaint);
+            g2.setFont(this.meterPlotProduct.getTickLabelFont());
+            g2.setPaint(this.meterPlotProduct.getTickLabelPaint());
 
             FontMetrics fm = g2.getFontMetrics();
             Rectangle2D tickLabelBounds
@@ -1119,15 +1004,15 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      * @param area  the plot area.
      */
     protected void drawValueLabel(Graphics2D g2, Rectangle2D area) {
-        if (valueVisible) {
-            g2.setFont(this.valueFont);
-            g2.setPaint(this.valuePaint);
+        if (meterPlotProduct.getValueVisible()) {
+            g2.setFont(this.meterPlotProduct.getValueFont());
+            g2.setPaint(this.meterPlotProduct.getValuePaint());
             String valueStr = "No value";
             if (this.dataset != null) {
                 Number n = this.dataset.getValue();
                 if (n != null) {
                     valueStr = this.tickLabelFormat.format(n.doubleValue()) + " "
-                        + this.units;
+                        + this.meterPlotProduct.getUnits();
                 }
             }
             float x = (float) area.getCenterX();
@@ -1179,60 +1064,60 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
             return false;
         }
         MeterPlot that = (MeterPlot) obj;
-        if (!Objects.equals(this.units, that.units)) {
+        if (!Objects.equals(this.meterPlotProduct.getUnits(), that.meterPlotProduct.getUnits())) {
             return false;
         }
-        if (!Objects.equals(this.range, that.range)) {
+        if (!Objects.equals(this.meterPlotProduct2.getRange(), that.meterPlotProduct2.getRange())) {
             return false;
         }
         if (!Objects.equals(this.intervals, that.intervals)) {
             return false;
         }
-        if (!PaintUtils.equal(this.dialOutlinePaint,
-                that.dialOutlinePaint)) {
+        if (!PaintUtils.equal(this.meterPlotProduct.getDialOutlinePaint(),
+                that.meterPlotProduct.getDialOutlinePaint())) {
             return false;
         }
-        if (this.shape != that.shape) {
+        if (this.meterPlotProduct2.getShape() != that.meterPlotProduct2.getShape()) {
             return false;
         }
-        if (!PaintUtils.equal(this.dialBackgroundPaint,
-                that.dialBackgroundPaint)) {
+        if (!PaintUtils.equal(this.meterPlotProduct.getDialBackgroundPaint(),
+                that.meterPlotProduct.getDialBackgroundPaint())) {
             return false;
         }
-        if (!PaintUtils.equal(this.needlePaint, that.needlePaint)) {
+        if (!PaintUtils.equal(this.meterPlotProduct.getNeedlePaint(), that.meterPlotProduct.getNeedlePaint())) {
             return false;
         }
-        if (this.valueVisible != that.valueVisible) {
+        if (this.meterPlotProduct.getValueVisible() != that.meterPlotProduct.getValueVisible()) {
             return false;
         }
-        if (!Objects.equals(this.valueFont, that.valueFont)) {
+        if (!Objects.equals(this.meterPlotProduct.getValueFont(), that.meterPlotProduct.getValueFont())) {
             return false;
         }
-        if (!PaintUtils.equal(this.valuePaint, that.valuePaint)) {
+        if (!PaintUtils.equal(this.meterPlotProduct.getValuePaint(), that.meterPlotProduct.getValuePaint())) {
             return false;
         }
-        if (!PaintUtils.equal(this.tickPaint, that.tickPaint)) {
+        if (!PaintUtils.equal(this.meterPlotProduct.getTickPaint(), that.meterPlotProduct.getTickPaint())) {
             return false;
         }
         if (this.tickSize != that.tickSize) {
             return false;
         }
-        if (this.tickLabelsVisible != that.tickLabelsVisible) {
+        if (this.meterPlotProduct.getTickLabelsVisible() != that.meterPlotProduct.getTickLabelsVisible()) {
             return false;
         }
-        if (!Objects.equals(this.tickLabelFont, that.tickLabelFont)) {
+        if (!Objects.equals(this.meterPlotProduct.getTickLabelFont(), that.meterPlotProduct.getTickLabelFont())) {
             return false;
         }
-        if (!PaintUtils.equal(this.tickLabelPaint, that.tickLabelPaint)) {
+        if (!PaintUtils.equal(this.meterPlotProduct.getTickLabelPaint(), that.meterPlotProduct.getTickLabelPaint())) {
             return false;
         }
         if (!Objects.equals(this.tickLabelFormat, that.tickLabelFormat)) {
             return false;
         }
-        if (this.drawBorder != that.drawBorder) {
+        if (this.meterPlotProduct2.getDrawBorder() != that.meterPlotProduct2.getDrawBorder()) {
             return false;
         }
-        if (this.meterAngle != that.meterAngle) {
+        if (this.meterPlotProduct2.getMeterAngle() != that.meterPlotProduct2.getMeterAngle()) {
             return false;
         }
         return true;
@@ -1247,12 +1132,12 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
      */
     private void writeObject(ObjectOutputStream stream) throws IOException {
         stream.defaultWriteObject();
-        SerialUtils.writePaint(this.dialBackgroundPaint, stream);
-        SerialUtils.writePaint(this.dialOutlinePaint, stream);
-        SerialUtils.writePaint(this.needlePaint, stream);
-        SerialUtils.writePaint(this.valuePaint, stream);
-        SerialUtils.writePaint(this.tickPaint, stream);
-        SerialUtils.writePaint(this.tickLabelPaint, stream);
+        SerialUtils.writePaint(this.meterPlotProduct.getDialBackgroundPaint(), stream);
+        SerialUtils.writePaint(this.meterPlotProduct.getDialOutlinePaint(), stream);
+        SerialUtils.writePaint(this.meterPlotProduct.getNeedlePaint(), stream);
+        SerialUtils.writePaint(this.meterPlotProduct.getValuePaint(), stream);
+        SerialUtils.writePaint(this.meterPlotProduct.getTickPaint(), stream);
+        SerialUtils.writePaint(this.meterPlotProduct.getTickLabelPaint(), stream);
     }
 
     /**
@@ -1266,12 +1151,12 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
     private void readObject(ObjectInputStream stream)
         throws IOException, ClassNotFoundException {
         stream.defaultReadObject();
-        this.dialBackgroundPaint = SerialUtils.readPaint(stream);
-        this.dialOutlinePaint = SerialUtils.readPaint(stream);
-        this.needlePaint = SerialUtils.readPaint(stream);
-        this.valuePaint = SerialUtils.readPaint(stream);
-        this.tickPaint = SerialUtils.readPaint(stream);
-        this.tickLabelPaint = SerialUtils.readPaint(stream);
+        meterPlotProduct.setDialBackgroundPaint2(SerialUtils.readPaint(stream));
+        meterPlotProduct.setDialOutlinePaint2(SerialUtils.readPaint(stream));
+        meterPlotProduct.setNeedlePaint2(SerialUtils.readPaint(stream));
+        meterPlotProduct.setValuePaint2(SerialUtils.readPaint(stream));
+        meterPlotProduct.setTickPaint2(SerialUtils.readPaint(stream));
+        meterPlotProduct.setTickLabelPaint2(SerialUtils.readPaint(stream));
         if (this.dataset != null) {
             this.dataset.addChangeListener(this);
         }
@@ -1290,6 +1175,8 @@ public class MeterPlot extends Plot implements Serializable, Cloneable {
     @Override
     public Object clone() throws CloneNotSupportedException {
         MeterPlot clone = (MeterPlot) super.clone();
+		clone.meterPlotProduct2 = (MeterPlotProduct2) this.meterPlotProduct2.clone();
+		clone.meterPlotProduct = (MeterPlotProduct) this.meterPlotProduct.clone();
         clone.tickLabelFormat = (NumberFormat) this.tickLabelFormat.clone();
         // the following relies on the fact that the intervals are immutable
         clone.intervals = new ArrayList<>(this.intervals);

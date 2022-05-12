@@ -2628,6 +2628,7 @@ public abstract class AbstractRenderer implements ChartElement, Cloneable, Seria
     /**
      * Sends a {@link RendererChangeEvent} to all registered listeners.
      */
+
     protected void fireChangeEvent() {
         abstractRendererProduct4.notifyListeners(new RendererChangeEvent(this));
     }
