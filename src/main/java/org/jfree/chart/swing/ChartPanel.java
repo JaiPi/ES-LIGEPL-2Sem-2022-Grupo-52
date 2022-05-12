@@ -71,6 +71,7 @@ import java.awt.event.InputEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.awt.event.MouseWheelEvent;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Point2D;
 import java.awt.geom.Rectangle2D;
@@ -2831,6 +2832,36 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         }
 
     }
+
+	/**
+	 * Handle the case where a plot implements the  {@link Zoomable}  interface.
+	 * @param zoomable   the zoomable plot.
+	 * @param e   the mouse wheel event.
+	 * @param zoomFactor
+	 */
+	public void handleZoomable(Zoomable zoomable, MouseWheelEvent e, double zoomFactor) {
+		ChartRenderingInfo info = getChartRenderingInfo();
+		PlotRenderingInfo pinfo = info.getPlotInfo();
+		Point2D p = translateScreenToJava2D(e.getPoint());
+		if (!pinfo.getDataArea().contains(p)) {
+			return;
+		}
+		Plot plot = (Plot) zoomable;
+		boolean notifyState = plot.isNotify();
+		plot.setNotify(false);
+		int clicks = e.getWheelRotation();
+		double zf = 1.0 + zoomFactor;
+		if (clicks < 0) {
+			zf = 1.0 / zf;
+		}
+		if (isDomainZoomable()) {
+			zoomable.zoomDomainAxes(zf, pinfo, p, true);
+		}
+		if (isRangeZoomable()) {
+			zoomable.zoomRangeAxes(zf, pinfo, p, true);
+		}
+		plot.setNotify(notifyState);
+	}
 
 }
 

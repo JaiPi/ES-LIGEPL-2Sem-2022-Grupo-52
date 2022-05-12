@@ -108,45 +108,12 @@ public class MouseWheelHandler implements MouseWheelListener, Serializable {
         Plot plot = chart.getPlot();
         if (plot instanceof Zoomable) {
             Zoomable zoomable = (Zoomable) plot;
-            handleZoomable(zoomable, e);
+            chartPanel.handleZoomable(zoomable, e, zoomFactor);
         }
         else if (plot instanceof PiePlot) {
             PiePlot pp = (PiePlot) plot;
             pp.handleMouseWheelRotation(e.getWheelRotation());
         }
-    }
-
-    /**
-     * Handle the case where a plot implements the {@link Zoomable} interface.
-     *
-     * @param zoomable  the zoomable plot.
-     * @param e  the mouse wheel event.
-     */
-    private void handleZoomable(Zoomable zoomable, MouseWheelEvent e) {
-        // don't zoom unless the mouse pointer is in the plot's data area
-        ChartRenderingInfo info = this.chartPanel.getChartRenderingInfo();
-        PlotRenderingInfo pinfo = info.getPlotInfo();
-        Point2D p = this.chartPanel.translateScreenToJava2D(e.getPoint());
-        if (!pinfo.getDataArea().contains(p)) {
-            return;
-        }
-
-        Plot plot = (Plot) zoomable;
-        // do not notify while zooming each axis
-        boolean notifyState = plot.isNotify();
-        plot.setNotify(false);
-        int clicks = e.getWheelRotation();
-        double zf = 1.0 + this.zoomFactor;
-        if (clicks < 0) {
-            zf = 1.0 / zf;
-        }
-        if (chartPanel.isDomainZoomable()) {
-            zoomable.zoomDomainAxes(zf, pinfo, p, true);
-        }
-        if (chartPanel.isRangeZoomable()) {
-            zoomable.zoomRangeAxes(zf, pinfo, p, true);
-        }
-        plot.setNotify(notifyState);  // this generates the change event too
     }
 
 }
