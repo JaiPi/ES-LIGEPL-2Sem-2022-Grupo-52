@@ -1479,20 +1479,6 @@ public class StandardChartTheme implements ChartTheme, Cloneable,
     }
 
     /**
-     * Applies the attributes for this theme to an {@link AbstractRenderer}.
-     *
-     * @param renderer  the renderer ({@code null} not permitted).
-     */
-    protected void applyToAbstractRenderer(AbstractRenderer renderer) {
-        if (renderer.getAutoPopulateSeriesPaint()) {
-            renderer.clearSeriesPaints(false);
-        }
-        if (renderer.getAutoPopulateSeriesStroke()) {
-            renderer.clearSeriesStrokes(false);
-        }
-    }
-
-    /**
      * Applies the settings of this theme to the specified renderer.
      *
      * @param renderer  the renderer ({@code null} not permitted).
@@ -1501,7 +1487,7 @@ public class StandardChartTheme implements ChartTheme, Cloneable,
         Args.nullNotPermitted(renderer, "renderer");
 
         if (renderer instanceof AbstractRenderer) {
-            applyToAbstractRenderer((AbstractRenderer) renderer);
+            ((AbstractRenderer) renderer).applyToAbstractRenderer();
         }
 
         renderer.setDefaultItemLabelFont(this.regularFont);
@@ -1539,7 +1525,7 @@ public class StandardChartTheme implements ChartTheme, Cloneable,
     protected void applyToXYItemRenderer(XYItemRenderer renderer) {
         Args.nullNotPermitted(renderer, "renderer");
         if (renderer instanceof AbstractRenderer) {
-            applyToAbstractRenderer((AbstractRenderer) renderer);
+            ((AbstractRenderer) renderer).applyToAbstractRenderer();
         }
         renderer.setDefaultItemLabelFont(this.regularFont);
         renderer.setDefaultItemLabelPaint(this.itemLabelPaint);
