@@ -37,6 +37,7 @@
 package org.jfree.chart.plot;
 
 import java.awt.geom.Point2D;
+import org.jfree.chart.internal.Args;
 
 /**
  * Maintains state information about crosshairs on a plot between successive
@@ -355,4 +356,32 @@ public class CrosshairState {
     public void setDatasetIndex(int index) {
         this.datasetIndex = index;
     }
+
+	/**
+	 * Considers the current (x, y) coordinate and updates the crosshair point if it meets the criteria (usually means the (x, y) coordinate is the closest to the anchor point so far).
+	 * @param x   the x-value (in data space).
+	 * @param y   the y-value (in data space).
+	 * @param datasetIndex   the index of the dataset for the point.
+	 * @param transX   the x-value translated to Java2D space.
+	 * @param transY   the y-value translated to Java2D space.
+	 * @param orientation   the plot orientation ( {@code  null}  not permitted).
+	 * @param plot
+	 */
+	public void updateCrosshairValues(double x, double y, int datasetIndex, double transX, double transY,
+			PlotOrientation orientation, XYPlot plot) {
+		Args.nullNotPermitted(orientation, "orientation");
+		if (this != null) {
+			if (plot.isDomainCrosshairLockedOnData()) {
+				if (plot.isRangeCrosshairLockedOnData()) {
+					updateCrosshairPoint(x, y, datasetIndex, transX, transY, orientation);
+				} else {
+					updateCrosshairX(x, transX, datasetIndex);
+				}
+			} else {
+				if (plot.isRangeCrosshairLockedOnData()) {
+					updateCrosshairY(y, transY, datasetIndex);
+				}
+			}
+		}
+	}
 }

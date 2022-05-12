@@ -1468,25 +1468,7 @@ public abstract class AbstractXYItemRenderer extends AbstractRenderer
             double x, double y, int datasetIndex,
             double transX, double transY, PlotOrientation orientation) {
 
-        Args.nullNotPermitted(orientation, "orientation");
-        if (crosshairState != null) {
-            // do we need to update the crosshair values?
-            if (this.plot.isDomainCrosshairLockedOnData()) {
-                if (this.plot.isRangeCrosshairLockedOnData()) {
-                    // both axes
-                    crosshairState.updateCrosshairPoint(x, y, datasetIndex,
-                            transX, transY, orientation);
-                } else {
-                    // just the domain axis...
-                    crosshairState.updateCrosshairX(x, transX, datasetIndex);
-                }
-            } else {
-                if (this.plot.isRangeCrosshairLockedOnData()) {
-                    // just the range axis...
-                    crosshairState.updateCrosshairY(y, transY, datasetIndex);
-                }
-            }
-        }
+        crosshairState.updateCrosshairValues(x, y, datasetIndex, transX, transY, orientation, plot);
 
     }
 
