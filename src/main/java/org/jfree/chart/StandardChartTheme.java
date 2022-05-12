@@ -1172,7 +1172,7 @@ public class StandardChartTheme implements ChartTheme, Cloneable,
             applyToThermometerPlot((ThermometerPlot) plot);
         }
         else if (plot instanceof SpiderWebPlot) {
-            applyToSpiderWebPlot((SpiderWebPlot) plot);
+            ((SpiderWebPlot) plot).applyToSpiderWebPlot(regularFont, axisLabelPaint);
         }
         else if (plot instanceof PolarPlot) {
             applyToPolarPlot((PolarPlot) plot);
@@ -1372,17 +1372,6 @@ public class StandardChartTheme implements ChartTheme, Cloneable,
         if (axis != null) {
             applyToValueAxis(axis);
         }
-    }
-
-    /**
-     * Applies the attributes of this theme to a {@link SpiderWebPlot}.
-     *
-     * @param plot  the plot ({@code null} not permitted).
-     */
-    protected void applyToSpiderWebPlot(SpiderWebPlot plot) {
-        plot.setLabelFont(this.regularFont);
-        plot.setLabelPaint(this.axisLabelPaint);
-        plot.setAxisLinePaint(this.axisLabelPaint);
     }
 
     /**
