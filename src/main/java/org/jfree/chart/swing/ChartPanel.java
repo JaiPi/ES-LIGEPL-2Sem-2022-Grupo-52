@@ -137,7 +137,9 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         ChartProgressListener, ActionListener, MouseListener,
         MouseMotionListener, OverlayChangeListener, Printable, Serializable {
 
-    /** For serialization. */
+    private ChartPanelProduct chartPanelProduct = new ChartPanelProduct();
+
+	/** For serialization. */
     protected static final long serialVersionUID = 6046366297214274674L;
 
     /**
@@ -334,33 +336,6 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
     /** A strategy to handle zoom rectangle processing and painting. */
     private SelectionZoomStrategy selectionZoomStrategy = new DefaultSelectionZoomStrategy();
-
-    /** Menu item for zooming in on a chart (both axes). */
-    protected JMenuItem zoomInBothMenuItem;
-
-    /** Menu item for zooming in on a chart (domain axis). */
-    protected JMenuItem zoomInDomainMenuItem;
-
-    /** Menu item for zooming in on a chart (range axis). */
-    protected JMenuItem zoomInRangeMenuItem;
-
-    /** Menu item for zooming out on a chart. */
-    protected JMenuItem zoomOutBothMenuItem;
-
-    /** Menu item for zooming out on a chart (domain axis). */
-    protected JMenuItem zoomOutDomainMenuItem;
-
-    /** Menu item for zooming out on a chart (range axis). */
-    protected JMenuItem zoomOutRangeMenuItem;
-
-    /** Menu item for resetting the zoom (both axes). */
-    protected JMenuItem zoomResetBothMenuItem;
-
-    /** Menu item for resetting the zoom (domain axis only). */
-    protected JMenuItem zoomResetDomainMenuItem;
-
-    /** Menu item for resetting the zoom (range axis only). */
-    protected JMenuItem zoomResetRangeMenuItem;
 
     /**
      * The default directory for saving charts to file.
@@ -605,7 +580,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
         // set up popup menu...
         this.popup = null;
         if (properties || copy || save || print || zoom) {
-            this.popup = createPopupMenu(properties, copy, save, print, zoom);
+            this.popup = chartPanelProduct.createPopupMenu(properties, copy, save, print, zoom, this);
         }
 
         enableEvents(AWTEvent.MOUSE_EVENT_MASK);
@@ -1747,7 +1722,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
             }
             if (e.isPopupTrigger()) {
                 if (this.popup != null) {
-                    displayPopupMenu(e.getX(), e.getY());
+                    chartPanelProduct.displayPopupMenu(e.getX(), e.getY(), this.popup, this.chart, this);
                 }
             }
         }
@@ -1918,7 +1893,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
 
         else if (e.isPopupTrigger()) {
             if (this.popup != null) {
-                displayPopupMenu(e.getX(), e.getY());
+                chartPanelProduct.displayPopupMenu(e.getX(), e.getY(), this.popup, this.chart, this);
             }
         }
 
@@ -2794,175 +2769,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
     protected JPopupMenu createPopupMenu(boolean properties,
             boolean copy, boolean save, boolean print, boolean zoom) {
 
-        JPopupMenu result = new JPopupMenu(localizationResources.getString("Chart") + ":");
-        boolean separator = false;
-
-        if (properties) {
-            JMenuItem propertiesItem = new JMenuItem(
-                    localizationResources.getString("Properties..."));
-            propertiesItem.setActionCommand(PROPERTIES_COMMAND);
-            propertiesItem.addActionListener(this);
-            result.add(propertiesItem);
-            separator = true;
-        }
-
-        if (copy) {
-            if (separator) {
-                result.addSeparator();
-            }
-            JMenuItem copyItem = new JMenuItem(
-                    localizationResources.getString("Copy"));
-            copyItem.setActionCommand(COPY_COMMAND);
-            copyItem.addActionListener(this);
-            result.add(copyItem);
-            separator = !save;
-        }
-
-        if (save) {
-            if (separator) {
-                result.addSeparator();
-            }
-
-            JMenu saveSubMenu = new JMenu(localizationResources.getString("Save_as"));
-
-            // PNG - current res
-            {
-                JMenuItem pngItem = new JMenuItem(localizationResources.getString(
-                        "PNG..."));
-                pngItem.setActionCommand(SAVE_AS_PNG_COMMAND);
-                pngItem.addActionListener(this);
-                saveSubMenu.add(pngItem);
-
-            }
-
-            // PNG - screen res
-            {
-            	final Dimension ss = Toolkit.getDefaultToolkit().getScreenSize();
-                final String pngName = "PNG ("+ss.width+"x"+ss.height+") ...";
-                JMenuItem pngItem = new JMenuItem(pngName);
-                pngItem.setActionCommand(SAVE_AS_PNG_SIZE_COMMAND);
-                pngItem.addActionListener(this);
-                saveSubMenu.add(pngItem);
-            }
-            
-            if (ChartUtils.isJFreeSVGAvailable()) {
-                JMenuItem svgItem = new JMenuItem(localizationResources.getString(
-                        "SVG..."));
-                svgItem.setActionCommand(SAVE_AS_SVG_COMMAND);
-                svgItem.addActionListener(this);
-                saveSubMenu.add(svgItem);                
-            }
-            
-            if (ChartUtils.isOrsonPDFAvailable()) {
-                JMenuItem pdfItem = new JMenuItem(
-                        localizationResources.getString("PDF..."));
-                pdfItem.setActionCommand(SAVE_AS_PDF_COMMAND);
-                pdfItem.addActionListener(this);
-                saveSubMenu.add(pdfItem);
-            }
-            result.add(saveSubMenu);
-            separator = true;
-        }
-
-        if (print) {
-            if (separator) {
-                result.addSeparator();
-            }
-            JMenuItem printItem = new JMenuItem(
-                    localizationResources.getString("Print..."));
-            printItem.setActionCommand(PRINT_COMMAND);
-            printItem.addActionListener(this);
-            result.add(printItem);
-            separator = true;
-        }
-
-        if (zoom) {
-            if (separator) {
-                result.addSeparator();
-            }
-
-            JMenu zoomInMenu = new JMenu(
-                    localizationResources.getString("Zoom_In"));
-
-            this.zoomInBothMenuItem = new JMenuItem(
-                    localizationResources.getString("All_Axes"));
-            this.zoomInBothMenuItem.setActionCommand(ZOOM_IN_BOTH_COMMAND);
-            this.zoomInBothMenuItem.addActionListener(this);
-            zoomInMenu.add(this.zoomInBothMenuItem);
-
-            zoomInMenu.addSeparator();
-
-            this.zoomInDomainMenuItem = new JMenuItem(
-                    localizationResources.getString("Domain_Axis"));
-            this.zoomInDomainMenuItem.setActionCommand(ZOOM_IN_DOMAIN_COMMAND);
-            this.zoomInDomainMenuItem.addActionListener(this);
-            zoomInMenu.add(this.zoomInDomainMenuItem);
-
-            this.zoomInRangeMenuItem = new JMenuItem(
-                    localizationResources.getString("Range_Axis"));
-            this.zoomInRangeMenuItem.setActionCommand(ZOOM_IN_RANGE_COMMAND);
-            this.zoomInRangeMenuItem.addActionListener(this);
-            zoomInMenu.add(this.zoomInRangeMenuItem);
-
-            result.add(zoomInMenu);
-
-            JMenu zoomOutMenu = new JMenu(
-                    localizationResources.getString("Zoom_Out"));
-
-            this.zoomOutBothMenuItem = new JMenuItem(
-                    localizationResources.getString("All_Axes"));
-            this.zoomOutBothMenuItem.setActionCommand(ZOOM_OUT_BOTH_COMMAND);
-            this.zoomOutBothMenuItem.addActionListener(this);
-            zoomOutMenu.add(this.zoomOutBothMenuItem);
-
-            zoomOutMenu.addSeparator();
-
-            this.zoomOutDomainMenuItem = new JMenuItem(
-                    localizationResources.getString("Domain_Axis"));
-            this.zoomOutDomainMenuItem.setActionCommand(
-                    ZOOM_OUT_DOMAIN_COMMAND);
-            this.zoomOutDomainMenuItem.addActionListener(this);
-            zoomOutMenu.add(this.zoomOutDomainMenuItem);
-
-            this.zoomOutRangeMenuItem = new JMenuItem(
-                    localizationResources.getString("Range_Axis"));
-            this.zoomOutRangeMenuItem.setActionCommand(ZOOM_OUT_RANGE_COMMAND);
-            this.zoomOutRangeMenuItem.addActionListener(this);
-            zoomOutMenu.add(this.zoomOutRangeMenuItem);
-
-            result.add(zoomOutMenu);
-
-            JMenu autoRangeMenu = new JMenu(
-                    localizationResources.getString("Auto_Range"));
-
-            this.zoomResetBothMenuItem = new JMenuItem(
-                    localizationResources.getString("All_Axes"));
-            this.zoomResetBothMenuItem.setActionCommand(
-                    ZOOM_RESET_BOTH_COMMAND);
-            this.zoomResetBothMenuItem.addActionListener(this);
-            autoRangeMenu.add(this.zoomResetBothMenuItem);
-
-            autoRangeMenu.addSeparator();
-            this.zoomResetDomainMenuItem = new JMenuItem(
-                    localizationResources.getString("Domain_Axis"));
-            this.zoomResetDomainMenuItem.setActionCommand(
-                    ZOOM_RESET_DOMAIN_COMMAND);
-            this.zoomResetDomainMenuItem.addActionListener(this);
-            autoRangeMenu.add(this.zoomResetDomainMenuItem);
-
-            this.zoomResetRangeMenuItem = new JMenuItem(
-                    localizationResources.getString("Range_Axis"));
-            this.zoomResetRangeMenuItem.setActionCommand(
-                    ZOOM_RESET_RANGE_COMMAND);
-            this.zoomResetRangeMenuItem.addActionListener(this);
-            autoRangeMenu.add(this.zoomResetRangeMenuItem);
-
-            result.addSeparator();
-            result.add(autoRangeMenu);
-
-        }
-
-        return result;
+        return chartPanelProduct.createPopupMenu(properties, copy, save, print, zoom, this);
 
     }
 
@@ -2975,56 +2782,7 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
      */
     protected void displayPopupMenu(int x, int y) {
 
-        if (this.popup == null) {
-            return;
-        }
-
-        // go through each zoom menu item and decide whether or not to
-        // enable it...
-        boolean isDomainZoomable = false;
-        boolean isRangeZoomable = false;
-        Plot plot = (this.chart != null ? this.chart.getPlot() : null);
-        if (plot instanceof Zoomable) {
-            Zoomable z = (Zoomable) plot;
-            isDomainZoomable = z.isDomainZoomable();
-            isRangeZoomable = z.isRangeZoomable();
-        }
-
-        if (this.zoomInDomainMenuItem != null) {
-            this.zoomInDomainMenuItem.setEnabled(isDomainZoomable);
-        }
-        if (this.zoomOutDomainMenuItem != null) {
-            this.zoomOutDomainMenuItem.setEnabled(isDomainZoomable);
-        }
-        if (this.zoomResetDomainMenuItem != null) {
-            this.zoomResetDomainMenuItem.setEnabled(isDomainZoomable);
-        }
-
-        if (this.zoomInRangeMenuItem != null) {
-            this.zoomInRangeMenuItem.setEnabled(isRangeZoomable);
-        }
-        if (this.zoomOutRangeMenuItem != null) {
-            this.zoomOutRangeMenuItem.setEnabled(isRangeZoomable);
-        }
-
-        if (this.zoomResetRangeMenuItem != null) {
-            this.zoomResetRangeMenuItem.setEnabled(isRangeZoomable);
-        }
-
-        if (this.zoomInBothMenuItem != null) {
-            this.zoomInBothMenuItem.setEnabled(isDomainZoomable
-                    && isRangeZoomable);
-        }
-        if (this.zoomOutBothMenuItem != null) {
-            this.zoomOutBothMenuItem.setEnabled(isDomainZoomable
-                    && isRangeZoomable);
-        }
-        if (this.zoomResetBothMenuItem != null) {
-            this.zoomResetBothMenuItem.setEnabled(isDomainZoomable
-                    && isRangeZoomable);
-        }
-
-        this.popup.show(this, x, y);
+        chartPanelProduct.displayPopupMenu(x, y, this.popup, this.chart, this);
 
     }
 
