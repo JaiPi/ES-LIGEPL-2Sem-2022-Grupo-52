@@ -170,4 +170,16 @@ public class OutlierList {
                 new Point2D.Double(totalXCoords / size, totalYCoords / size));
     }
 
+	/**
+	 * Updates the outlier list by adding the outlier to the end of the list and setting the averaged outlier to the average x and y coordinate values of the outliers in the list.
+	 * @param outlier   the outlier to be added
+	 * @return  <tt>true</tt> (as per the general contract of Collection.add).
+	 */
+	public boolean updateOutlierList(Outlier outlier) {
+		boolean result = add(outlier);
+		updateAveragedOutlier();
+		setMultiple(true);
+		return result;
+	}
+
 }
