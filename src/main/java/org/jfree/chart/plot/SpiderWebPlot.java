@@ -1424,4 +1424,15 @@ public class SpiderWebPlot extends Plot implements Cloneable, Serializable {
         }
     }
 
+	/**
+	 * Applies the attributes of this theme to a  {@link SpiderWebPlot} .
+	 * @param regularFont
+	 * @param axisLabelPaint
+	 */
+	public void applyToSpiderWebPlot(Font regularFont, Paint axisLabelPaint) {
+		setLabelFont(regularFont);
+		setLabelPaint(axisLabelPaint);
+		setAxisLinePaint(axisLabelPaint);
+	}
+
 }
