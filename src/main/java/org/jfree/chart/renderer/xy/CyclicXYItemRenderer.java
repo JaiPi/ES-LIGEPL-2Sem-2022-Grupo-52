@@ -236,43 +236,21 @@ public class CyclicXYItemRenderer extends StandardXYItemRenderer
 
         OverwriteDataSet newset = new OverwriteDataSet(x, y, dataset);
 
-        if (cnax != null) {
-            if (xcycleBound == x[0]) {
-                cnax.setBoundMappedToLastCycle(x[1] <= xcycleBound);
-            }
-            if (xcycleBound == x[1]) {
-                cnax.setBoundMappedToLastCycle(x[0] <= xcycleBound);
-            }
-        }
-        if (cnay != null) {
-            if (ycycleBound == y[0]) {
-                cnay.setBoundMappedToLastCycle(y[1] <= ycycleBound);
-            }
-            if (ycycleBound == y[1]) {
-                cnay.setBoundMappedToLastCycle(y[0] <= ycycleBound);
-            }
-        }
+        cyclebound(x, y, xcycleBound, ycycleBound, cnax, cnay);
         super.drawItem(
             g2, state, dataArea, info, plot, domainAxis, rangeAxis,
             newset, series, 1, crosshairState, pass
         );
 
-        if (cnax != null) {
-            if (xcycleBound == x[1]) {
-                cnax.setBoundMappedToLastCycle(x[2] <= xcycleBound);
-            }
-            if (xcycleBound == x[2]) {
-                cnax.setBoundMappedToLastCycle(x[1] <= xcycleBound);
-            }
-        }
-        if (cnay != null) {
-            if (ycycleBound == y[1]) {
-                cnay.setBoundMappedToLastCycle(y[2] <= ycycleBound);
-            }
-            if (ycycleBound == y[2]) {
-                cnay.setBoundMappedToLastCycle(y[1] <= ycycleBound);
-            }
-        }
+        cnay_cmax(g2, state, dataArea, info, plot, domainAxis, rangeAxis, series, crosshairState, pass, x, y,
+				xcycleBound, ycycleBound, xBoundMapping, yBoundMapping, cnax, cnay, newset);
+    }
+
+	private void cnay_cmax(Graphics2D g2, XYItemRendererState state, Rectangle2D dataArea, PlotRenderingInfo info,
+			XYPlot plot, ValueAxis domainAxis, ValueAxis rangeAxis, int series, CrosshairState crosshairState, int pass,
+			double[] x, double[] y, double xcycleBound, double ycycleBound, boolean xBoundMapping,
+			boolean yBoundMapping, CyclicNumberAxis cnax, CyclicNumberAxis cnay, OverwriteDataSet newset) {
+		cnay_cmax2(x, y, xcycleBound, ycycleBound, cnax, cnay);
         super.drawItem(g2, state, dataArea, info, plot, domainAxis, rangeAxis,
                 newset, series, 2, crosshairState, pass);
 
@@ -303,7 +281,47 @@ public class CyclicXYItemRenderer extends StandardXYItemRenderer
         if (cnay != null) {
             cnay.setBoundMappedToLastCycle(yBoundMapping);
         }
-    }
+	}
+
+	private void cnay_cmax2(double[] x, double[] y, double xcycleBound, double ycycleBound, CyclicNumberAxis cnax,
+			CyclicNumberAxis cnay) {
+		if (cnax != null) {
+            if (xcycleBound == x[1]) {
+                cnax.setBoundMappedToLastCycle(x[2] <= xcycleBound);
+            }
+            if (xcycleBound == x[2]) {
+                cnax.setBoundMappedToLastCycle(x[1] <= xcycleBound);
+            }
+        }
+        if (cnay != null) {
+            if (ycycleBound == y[1]) {
+                cnay.setBoundMappedToLastCycle(y[2] <= ycycleBound);
+            }
+            if (ycycleBound == y[2]) {
+                cnay.setBoundMappedToLastCycle(y[1] <= ycycleBound);
+            }
+        }
+	}
+
+	private void cyclebound(double[] x, double[] y, double xcycleBound, double ycycleBound, CyclicNumberAxis cnax,
+			CyclicNumberAxis cnay) {
+		if (cnax != null) {
+            if (xcycleBound == x[0]) {
+                cnax.setBoundMappedToLastCycle(x[1] <= xcycleBound);
+            }
+            if (xcycleBound == x[1]) {
+                cnax.setBoundMappedToLastCycle(x[0] <= xcycleBound);
+            }
+        }
+        if (cnay != null) {
+            if (ycycleBound == y[0]) {
+                cnay.setBoundMappedToLastCycle(y[1] <= ycycleBound);
+            }
+            if (ycycleBound == y[1]) {
+                cnay.setBoundMappedToLastCycle(y[0] <= ycycleBound);
+            }
+        }
+	}
 
     /**
      * A dataset to hold the interpolated points when drawing new lines.
