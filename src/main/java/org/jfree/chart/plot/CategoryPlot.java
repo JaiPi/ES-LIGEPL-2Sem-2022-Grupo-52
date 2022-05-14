@@ -3312,21 +3312,7 @@ public class CategoryPlot<R extends Comparable<R>, C extends Comparable<C>>
         // on data)
         crosshairState.setAnchorX(Double.NaN);
         crosshairState.setAnchorY(Double.NaN);
-        if (anchor != null) {
-            ValueAxis rangeAxis = getRangeAxis();
-            if (rangeAxis != null) {
-                double y;
-                if (getOrientation() == PlotOrientation.VERTICAL) {
-                    y = rangeAxis.java2DToValue(anchor.getY(), dataArea,
-                            getRangeAxisEdge());
-                }
-                else {
-                    y = rangeAxis.java2DToValue(anchor.getX(), dataArea,
-                            getRangeAxisEdge());
-                }
-                crosshairState.setAnchorY(y);
-            }
-        }
+        anchor_extract(anchor, dataArea, crosshairState);
         crosshairState.setRowKey(getDomainCrosshairRowKey());
         crosshairState.setColumnKey(getDomainCrosshairColumnKey());
         crosshairState.setCrosshairY(getRangeCrosshairValue());
@@ -3338,16 +3324,7 @@ public class CategoryPlot<R extends Comparable<R>, C extends Comparable<C>>
         drawDomainGridlines(g2, dataArea);
 
         AxisState rangeAxisState = axisStateMap.get(getRangeAxis());
-        if (rangeAxisState == null) {
-            if (parentState != null) {
-                rangeAxisState = parentState.getSharedAxisStates()
-                        .get(getRangeAxis());
-            }
-        }
-        if (rangeAxisState != null) {
-            drawRangeGridlines(g2, dataArea, rangeAxisState.getTicks());
-            drawZeroRangeBaseline(g2, dataArea);
-        }
+        chechaxis_extract(g2, parentState, dataArea, rangeAxisState);
 
         Graphics2D savedG2 = g2;
         BufferedImage dataImage = null;
@@ -3362,14 +3339,7 @@ public class CategoryPlot<R extends Comparable<R>, C extends Comparable<C>>
         }
 
         // draw the markers...
-        for (CategoryItemRenderer renderer : this.renderers.values()) {
-            int i = getIndexOf(renderer);
-            drawDomainMarkers(g2, dataArea, i, Layer.BACKGROUND);
-        }
-        for (CategoryItemRenderer renderer : this.renderers.values()) {
-            int i = getIndexOf(renderer);
-            drawRangeMarkers(g2, dataArea, i, Layer.BACKGROUND);
-        }
+        iterate_renderer_extract(g2, dataArea);
 
         // now render data items...
         boolean foundData = false;
@@ -3388,12 +3358,7 @@ public class CategoryPlot<R extends Comparable<R>, C extends Comparable<C>>
 
         // draw the foreground markers...
         List<Integer> rendererIndices = getRendererIndices(order);
-        for (int i : rendererIndices) {
-            drawDomainMarkers(g2, dataArea, i, Layer.FOREGROUND);
-        }
-        for (int i : rendererIndices) {
-            drawRangeMarkers(g2, dataArea, i, Layer.FOREGROUND);
-        }
+        iteraterendererindexes_extract(g2, dataArea, rendererIndices);
 
         // draw the annotations (if any)...
         drawAnnotations(g2, dataArea);
@@ -3434,7 +3399,61 @@ public class CategoryPlot<R extends Comparable<R>, C extends Comparable<C>>
         // draw range crosshair if required...
         ValueAxis yAxis = getRangeAxisForDataset(datasetIndex);
         RectangleEdge yAxisEdge = getRangeAxisEdge();
-        if (!this.rangeCrosshairLockedOnData && anchor != null) {
+        rangecrosshair_extract(g2, anchor, dataArea, crosshairState, yAxis, yAxisEdge);
+
+        // draw an outline around the plot area...
+        is_outlinevisible_extract(g2, dataArea);
+
+    }
+
+	private void is_outlinevisible_extract(Graphics2D g2, Rectangle2D dataArea) {
+		if (isOutlineVisible()) {
+            if (getRenderer() != null) {
+                getRenderer().drawOutline(g2, this, dataArea);
+            }
+            else {
+                drawOutline(g2, dataArea);
+            }
+        }
+	}
+
+	private void iteraterendererindexes_extract(Graphics2D g2, Rectangle2D dataArea, List<Integer> rendererIndices) {
+		for (int i : rendererIndices) {
+            drawDomainMarkers(g2, dataArea, i, Layer.FOREGROUND);
+        }
+        for (int i : rendererIndices) {
+            drawRangeMarkers(g2, dataArea, i, Layer.FOREGROUND);
+        }
+	}
+
+	private void chechaxis_extract(Graphics2D g2, PlotState parentState, Rectangle2D dataArea,
+			AxisState rangeAxisState) {
+		if (rangeAxisState == null) {
+            if (parentState != null) {
+                rangeAxisState = parentState.getSharedAxisStates()
+                        .get(getRangeAxis());
+            }
+        }
+        if (rangeAxisState != null) {
+            drawRangeGridlines(g2, dataArea, rangeAxisState.getTicks());
+            drawZeroRangeBaseline(g2, dataArea);
+        }
+	}
+
+	private void iterate_renderer_extract(Graphics2D g2, Rectangle2D dataArea) {
+		for (CategoryItemRenderer renderer : this.renderers.values()) {
+            int i = getIndexOf(renderer);
+            drawDomainMarkers(g2, dataArea, i, Layer.BACKGROUND);
+        }
+        for (CategoryItemRenderer renderer : this.renderers.values()) {
+            int i = getIndexOf(renderer);
+            drawRangeMarkers(g2, dataArea, i, Layer.BACKGROUND);
+        }
+	}
+
+	private void rangecrosshair_extract(Graphics2D g2, Point2D anchor, Rectangle2D dataArea,
+			CategoryCrosshairState<R, C> crosshairState, ValueAxis yAxis, RectangleEdge yAxisEdge) {
+		if (!this.rangeCrosshairLockedOnData && anchor != null) {
             double yy;
             if (getOrientation() == PlotOrientation.VERTICAL) {
                 yy = yAxis.java2DToValue(anchor.getY(), dataArea, yAxisEdge);
@@ -3452,18 +3471,25 @@ public class CategoryPlot<R extends Comparable<R>, C extends Comparable<C>>
             drawRangeCrosshair(g2, dataArea, getOrientation(), y, yAxis,
                     stroke, paint);
         }
+	}
 
-        // draw an outline around the plot area...
-        if (isOutlineVisible()) {
-            if (getRenderer() != null) {
-                getRenderer().drawOutline(g2, this, dataArea);
-            }
-            else {
-                drawOutline(g2, dataArea);
+	private void anchor_extract(Point2D anchor, Rectangle2D dataArea, CategoryCrosshairState<R, C> crosshairState) {
+		if (anchor != null) {
+            ValueAxis rangeAxis = getRangeAxis();
+            if (rangeAxis != null) {
+                double y;
+                if (getOrientation() == PlotOrientation.VERTICAL) {
+                    y = rangeAxis.java2DToValue(anchor.getY(), dataArea,
+                            getRangeAxisEdge());
+                }
+                else {
+                    y = rangeAxis.java2DToValue(anchor.getX(), dataArea,
+                            getRangeAxisEdge());
+                }
+                crosshairState.setAnchorY(y);
             }
         }
-
-    }
+	}
 
     /**
      * Returns the indices of the non-null datasets in the specified order.

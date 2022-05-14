@@ -489,33 +489,7 @@ public class FlowPlot extends Plot implements Cloneable, PublicCloneable,
         double nodeMargin2d = this.nodeMargin * area.getHeight();
         int stageCount = this.dataset.getStageCount();
         for (int stage = 0; stage < this.dataset.getStageCount(); stage++) {
-            List<Comparable> sources = this.dataset.getSources(stage);
-            int nodeCount = sources.size();
-            double flowTotal = 0.0;
-            for (Comparable source : sources) {
-                double inflow = FlowDatasetUtils.calculateInflow(this.dataset, source, stage);
-                double outflow = FlowDatasetUtils.calculateOutflow(this.dataset, source, stage);
-                flowTotal = flowTotal + Math.max(inflow, outflow);
-            }
-            if (flowTotal > 0.0) {
-                double availableH = area.getHeight() - (nodeCount - 1) * nodeMargin2d;
-                flow2d = Math.min(availableH / flowTotal, flow2d);
-            }
-            
-            if (stage == this.dataset.getStageCount() - 1) {
-                // check inflows to the final destination nodes...
-                List<Comparable> destinations = this.dataset.getDestinations(stage);
-                int destinationCount = destinations.size();
-                flowTotal = 0.0;
-                for (Comparable destination : destinations) {
-                    double inflow = FlowDatasetUtils.calculateInflow(this.dataset, destination, stage + 1);
-                    flowTotal = flowTotal + inflow;
-                }
-                if (flowTotal > 0.0) {
-                    double availableH = area.getHeight() - (destinationCount - 1) * nodeMargin2d;
-                    flow2d = Math.min(availableH / flowTotal, flow2d);
-                }
-            }
+            flow2d = iteratestage_extract(area, flow2d, nodeMargin2d, stage);
         }
 
         double stageWidth = (area.getWidth() - ((stageCount + 1) * this.nodeWidth)) / stageCount;
@@ -537,50 +511,16 @@ public class FlowPlot extends Plot implements Cloneable, PublicCloneable,
             Map<FlowKey, Rectangle2D> sourceFlowRects = new HashMap<>();
             double nodeY = area.getY();
             for (Object s : this.dataset.getSources(stage)) {
-                Comparable source = (Comparable) s;
-                double inflow = FlowDatasetUtils.calculateInflow(dataset, source, stage);
-                double outflow = FlowDatasetUtils.calculateOutflow(dataset, source, stage);
-                double nodeHeight = (Math.max(inflow, outflow) * flow2d);
-                Rectangle2D nodeRect = new Rectangle2D.Double(stageLeft - nodeWidth, nodeY, nodeWidth, nodeHeight);
-                if (entities != null) {
-                    entities.add(new NodeEntity(new NodeKey<>(stage, source), nodeRect, source.toString()));                
-                }
-                nodeRects.put(new NodeKey<>(stage, source), nodeRect);
-                double y = nodeY;
-                for (Object d : this.dataset.getDestinations(stage)) {
-                    Comparable destination = (Comparable) d;
-                    Number flow = this.dataset.getFlow(stage, source, destination);
-                    if (flow != null) {
-                        double height = flow.doubleValue() * flow2d;
-                        Rectangle2D rect = new Rectangle2D.Double(stageLeft - nodeWidth, y, nodeWidth, height);
-                        sourceFlowRects.put(new FlowKey<>(stage, source, destination), rect);
-                        y = y + height;
-                    }
-                }
-                nodeY = nodeY + nodeHeight + nodeMargin2d;
+                nodeY = iterate_object_extract(entities, flow2d, nodeMargin2d, nodeRects, stage, stageLeft,
+						sourceFlowRects, nodeY, s);
             }
             
             // calculate the destination rectangles
             Map<FlowKey, Rectangle2D> destFlowRects = new HashMap<>();
             nodeY = area.getY();
             for (Object d : this.dataset.getDestinations(stage)) {
-                Comparable destination = (Comparable) d;
-                double inflow = FlowDatasetUtils.calculateInflow(dataset, destination, stage + 1);
-                double outflow = FlowDatasetUtils.calculateOutflow(dataset, destination, stage + 1);
-                double nodeHeight = Math.max(inflow, outflow) * flow2d;
-                nodeRects.put(new NodeKey<>(stage + 1, destination), new Rectangle2D.Double(stageRight, nodeY, nodeWidth, nodeHeight));
-                double y = nodeY;
-                for (Object s : this.dataset.getSources(stage)) {
-                    Comparable source = (Comparable) s;
-                    Number flow = this.dataset.getFlow(stage, source, destination);
-                    if (flow != null) {
-                        double height = flow.doubleValue() * flow2d;
-                        Rectangle2D rect = new Rectangle2D.Double(stageRight, y, nodeWidth, height);
-                        y = y + height;
-                        destFlowRects.put(new FlowKey<>(stage, source, destination), rect);
-                    }
-                }
-                nodeY = nodeY + nodeHeight + nodeMargin2d;
+                nodeY = iteratedestinations_extract(flow2d, nodeMargin2d, nodeRects, stage, stageRight, nodeY,
+						destFlowRects, d);
             }
         
             for (Object s : this.dataset.getSources(stage)) {
@@ -640,7 +580,17 @@ public class FlowPlot extends Plot implements Cloneable, PublicCloneable,
         
         // now draw the destination nodes
         int lastStage = this.dataset.getStageCount() - 1;
-        for (Object d : this.dataset.getDestinations(lastStage)) {
+        iterate_destin_extract(g2, entities, nodeRects, hasNodeSelections, lastStage);
+        
+        // now draw all the labels over top of everything else
+        g2.setFont(this.defaultNodeLabelFont);
+        g2.setPaint(this.defaultNodeLabelPaint);
+        iterateNodeKey_extract(g2, flowOffset, nodeRects);
+    }
+
+	private void iterate_destin_extract(Graphics2D g2, EntityCollection entities, Map<NodeKey, Rectangle2D> nodeRects,
+			boolean hasNodeSelections, int lastStage) {
+		for (Object d : this.dataset.getDestinations(lastStage)) {
             Comparable destination = (Comparable) d;
             NodeKey nodeKey = new NodeKey<>(lastStage + 1, destination);
             Rectangle2D nodeRect = nodeRects.get(nodeKey);
@@ -659,11 +609,10 @@ public class FlowPlot extends Plot implements Cloneable, PublicCloneable,
                 }
             }
         }
-        
-        // now draw all the labels over top of everything else
-        g2.setFont(this.defaultNodeLabelFont);
-        g2.setPaint(this.defaultNodeLabelPaint);
-        for (NodeKey key : nodeRects.keySet()) {
+	}
+
+	private void iterateNodeKey_extract(Graphics2D g2, double flowOffset, Map<NodeKey, Rectangle2D> nodeRects) {
+		for (NodeKey key : nodeRects.keySet()) {
             Rectangle2D r = nodeRects.get(key);
             if (key.getStage() < this.dataset.getStageCount()) {
                 TextUtils.drawAlignedString(key.getNode().toString(), g2, 
@@ -675,7 +624,87 @@ public class FlowPlot extends Plot implements Cloneable, PublicCloneable,
                         (float) labelY(r), TextAnchor.CENTER_RIGHT);                
             }
         }
-    }
+	}
+
+	private double iteratedestinations_extract(double flow2d, double nodeMargin2d, Map<NodeKey, Rectangle2D> nodeRects,
+			int stage, double stageRight, double nodeY, Map<FlowKey, Rectangle2D> destFlowRects, Object d) {
+		Comparable destination = (Comparable) d;
+		double inflow = FlowDatasetUtils.calculateInflow(dataset, destination, stage + 1);
+		double outflow = FlowDatasetUtils.calculateOutflow(dataset, destination, stage + 1);
+		double nodeHeight = Math.max(inflow, outflow) * flow2d;
+		nodeRects.put(new NodeKey<>(stage + 1, destination), new Rectangle2D.Double(stageRight, nodeY, nodeWidth, nodeHeight));
+		double y = nodeY;
+		for (Object s : this.dataset.getSources(stage)) {
+		    Comparable source = (Comparable) s;
+		    Number flow = this.dataset.getFlow(stage, source, destination);
+		    if (flow != null) {
+		        double height = flow.doubleValue() * flow2d;
+		        Rectangle2D rect = new Rectangle2D.Double(stageRight, y, nodeWidth, height);
+		        y = y + height;
+		        destFlowRects.put(new FlowKey<>(stage, source, destination), rect);
+		    }
+		}
+		nodeY = nodeY + nodeHeight + nodeMargin2d;
+		return nodeY;
+	}
+
+	private double iterate_object_extract(EntityCollection entities, double flow2d, double nodeMargin2d,
+			Map<NodeKey, Rectangle2D> nodeRects, int stage, double stageLeft, Map<FlowKey, Rectangle2D> sourceFlowRects,
+			double nodeY, Object s) {
+		Comparable source = (Comparable) s;
+		double inflow = FlowDatasetUtils.calculateInflow(dataset, source, stage);
+		double outflow = FlowDatasetUtils.calculateOutflow(dataset, source, stage);
+		double nodeHeight = (Math.max(inflow, outflow) * flow2d);
+		Rectangle2D nodeRect = new Rectangle2D.Double(stageLeft - nodeWidth, nodeY, nodeWidth, nodeHeight);
+		if (entities != null) {
+		    entities.add(new NodeEntity(new NodeKey<>(stage, source), nodeRect, source.toString()));                
+		}
+		nodeRects.put(new NodeKey<>(stage, source), nodeRect);
+		double y = nodeY;
+		for (Object d : this.dataset.getDestinations(stage)) {
+		    Comparable destination = (Comparable) d;
+		    Number flow = this.dataset.getFlow(stage, source, destination);
+		    if (flow != null) {
+		        double height = flow.doubleValue() * flow2d;
+		        Rectangle2D rect = new Rectangle2D.Double(stageLeft - nodeWidth, y, nodeWidth, height);
+		        sourceFlowRects.put(new FlowKey<>(stage, source, destination), rect);
+		        y = y + height;
+		    }
+		}
+		nodeY = nodeY + nodeHeight + nodeMargin2d;
+		return nodeY;
+	}
+
+	private double iteratestage_extract(Rectangle2D area, double flow2d, double nodeMargin2d, int stage) {
+		List<Comparable> sources = this.dataset.getSources(stage);
+		int nodeCount = sources.size();
+		double flowTotal = 0.0;
+		for (Comparable source : sources) {
+		    double inflow = FlowDatasetUtils.calculateInflow(this.dataset, source, stage);
+		    double outflow = FlowDatasetUtils.calculateOutflow(this.dataset, source, stage);
+		    flowTotal = flowTotal + Math.max(inflow, outflow);
+		}
+		if (flowTotal > 0.0) {
+		    double availableH = area.getHeight() - (nodeCount - 1) * nodeMargin2d;
+		    flow2d = Math.min(availableH / flowTotal, flow2d);
+		}
+		
+		if (stage == this.dataset.getStageCount() - 1) {
+		    // check inflows to the final destination nodes...
+		    List<Comparable> destinations = this.dataset.getDestinations(stage);
+		    int destinationCount = destinations.size();
+		    flowTotal = 0.0;
+		    for (Comparable destination : destinations) {
+		        double inflow = FlowDatasetUtils.calculateInflow(this.dataset, destination, stage + 1);
+		        flowTotal = flowTotal + inflow;
+		    }
+		    if (flowTotal > 0.0) {
+		        double availableH = area.getHeight() - (destinationCount - 1) * nodeMargin2d;
+		        flow2d = Math.min(availableH / flowTotal, flow2d);
+		    }
+		}
+		return flow2d;
+	}
     
     /**
      * Performs a lookup on the color for the specified node.

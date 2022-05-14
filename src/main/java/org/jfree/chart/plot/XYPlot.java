@@ -2891,34 +2891,7 @@ public class XYPlot<S extends Comparable<S>> extends Plot
 
         crosshairState.setAnchorX(Double.NaN);
         crosshairState.setAnchorY(Double.NaN);
-        if (anchor != null) {
-            ValueAxis domainAxis = getDomainAxis();
-            if (domainAxis != null) {
-                double x;
-                if (orient == PlotOrientation.VERTICAL) {
-                    x = domainAxis.java2DToValue(anchor.getX(), dataArea,
-                            getDomainAxisEdge());
-                }
-                else {
-                    x = domainAxis.java2DToValue(anchor.getY(), dataArea,
-                            getDomainAxisEdge());
-                }
-                crosshairState.setAnchorX(x);
-            }
-            ValueAxis rangeAxis = getRangeAxis();
-            if (rangeAxis != null) {
-                double y;
-                if (orient == PlotOrientation.VERTICAL) {
-                    y = rangeAxis.java2DToValue(anchor.getY(), dataArea,
-                            getRangeAxisEdge());
-                }
-                else {
-                    y = rangeAxis.java2DToValue(anchor.getX(), dataArea,
-                            getRangeAxisEdge());
-                }
-                crosshairState.setAnchorY(y);
-            }
-        }
+        anchor_extracted(anchor, dataArea, orient, crosshairState);
         crosshairState.setCrosshairX(getDomainCrosshairValue());
         crosshairState.setCrosshairY(getRangeCrosshairValue());
         Shape originalClip = g2.getClip();
@@ -2928,35 +2901,7 @@ public class XYPlot<S extends Comparable<S>> extends Plot
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER,
                 getForegroundAlpha()));
 
-        AxisState domainAxisState = axisStateMap.get(getDomainAxis());
-        if (domainAxisState == null) {
-            if (parentState != null) {
-                domainAxisState = parentState.getSharedAxisStates()
-                        .get(getDomainAxis());
-            }
-        }
-
-        AxisState rangeAxisState = axisStateMap.get(getRangeAxis());
-        if (rangeAxisState == null) {
-            if (parentState != null) {
-                rangeAxisState = parentState.getSharedAxisStates()
-                        .get(getRangeAxis());
-            }
-        }
-        if (domainAxisState != null) {
-            drawDomainTickBands(g2, dataArea, domainAxisState.getTicks());
-        }
-        if (rangeAxisState != null) {
-            drawRangeTickBands(g2, dataArea, rangeAxisState.getTicks());
-        }
-        if (domainAxisState != null) {
-            drawDomainGridlines(g2, dataArea, domainAxisState.getTicks());
-            drawZeroDomainBaseline(g2, dataArea);
-        }
-        if (rangeAxisState != null) {
-            drawRangeGridlines(g2, dataArea, rangeAxisState.getTicks());
-            drawZeroRangeBaseline(g2, dataArea);
-        }
+        rangeaxis_extracted(g2, parentState, dataArea, axisStateMap);
 
         Graphics2D savedG2 = g2;
         BufferedImage dataImage = null;
@@ -2987,32 +2932,7 @@ public class XYPlot<S extends Comparable<S>> extends Plot
         List<Integer> datasetIndices = getDatasetIndices(order);
 
         // draw background annotations
-        for (int i : rendererIndices) {
-            XYItemRenderer renderer = getRenderer(i);
-            if (renderer != null) {
-                ValueAxis domainAxis = getDomainAxisForDataset(i);
-                ValueAxis rangeAxis = getRangeAxisForDataset(i);
-                renderer.drawAnnotations(g2, dataArea, domainAxis, rangeAxis, 
-                        Layer.BACKGROUND, info);
-            }
-        }
-
-        // render data items...
-        for (int datasetIndex : datasetIndices) {
-            foundData = render(g2, dataArea, datasetIndex, info, 
-                    crosshairState) || foundData;
-        }
-
-        // draw foreground annotations
-        for (int i : rendererIndices) {
-            XYItemRenderer renderer = getRenderer(i);
-            if (renderer != null) {
-                    ValueAxis domainAxis = getDomainAxisForDataset(i);
-                    ValueAxis rangeAxis = getRangeAxisForDataset(i);
-                renderer.drawAnnotations(g2, dataArea, domainAxis, rangeAxis, 
-                            Layer.FOREGROUND, info);
-            }
-        }
+        foundData = for_extract(g2, info, dataArea, crosshairState, foundData, rendererIndices, datasetIndices);
 
         // draw domain crosshair if required...
         int datasetIndex = crosshairState.getDatasetIndex();
@@ -3037,7 +2957,30 @@ public class XYPlot<S extends Comparable<S>> extends Plot
         }
 
         // draw range crosshair if required...
-        ValueAxis yAxis = getRangeAxisForDataset(datasetIndex);
+        drawrange(g2, anchor, dataArea, orient, crosshairState, foundData, rendererIndices, datasetIndex);
+
+        drawAnnotations(g2, dataArea, info);
+        if (this.shadowGenerator != null && !suppressShadow) {
+            BufferedImage shadowImage
+                    = this.shadowGenerator.createDropShadow(dataImage);
+            g2 = savedG2;
+            g2.drawImage(shadowImage, (int) dataArea.getX()
+                    + this.shadowGenerator.calculateOffsetX(),
+                    (int) dataArea.getY()
+                    + this.shadowGenerator.calculateOffsetY(), null);
+            g2.drawImage(dataImage, (int) dataArea.getX(),
+                    (int) dataArea.getY(), null);
+        }
+        g2.setClip(originalClip);
+        g2.setComposite(originalComposite);
+
+        drawOutline(g2, dataArea);
+
+    }
+
+	private void drawrange(Graphics2D g2, Point2D anchor, Rectangle2D dataArea, PlotOrientation orient,
+			CrosshairState crosshairState, boolean foundData, List<Integer> rendererIndices, int datasetIndex) {
+		ValueAxis yAxis = getRangeAxisForDataset(datasetIndex);
         RectangleEdge yAxisEdge = getRangeAxisEdge(getRangeAxisIndex(yAxis));
         if (!this.rangeCrosshairLockedOnData && anchor != null) {
             double yy;
@@ -3066,25 +3009,104 @@ public class XYPlot<S extends Comparable<S>> extends Plot
         for (int i : rendererIndices) {
             drawRangeMarkers(g2, dataArea, i, Layer.FOREGROUND);
         }
+	}
 
-        drawAnnotations(g2, dataArea, info);
-        if (this.shadowGenerator != null && !suppressShadow) {
-            BufferedImage shadowImage
-                    = this.shadowGenerator.createDropShadow(dataImage);
-            g2 = savedG2;
-            g2.drawImage(shadowImage, (int) dataArea.getX()
-                    + this.shadowGenerator.calculateOffsetX(),
-                    (int) dataArea.getY()
-                    + this.shadowGenerator.calculateOffsetY(), null);
-            g2.drawImage(dataImage, (int) dataArea.getX(),
-                    (int) dataArea.getY(), null);
+	private boolean for_extract(Graphics2D g2, PlotRenderingInfo info, Rectangle2D dataArea,
+			CrosshairState crosshairState, boolean foundData, List<Integer> rendererIndices,
+			List<Integer> datasetIndices) {
+		for (int i : rendererIndices) {
+            XYItemRenderer renderer = getRenderer(i);
+            if (renderer != null) {
+                ValueAxis domainAxis = getDomainAxisForDataset(i);
+                ValueAxis rangeAxis = getRangeAxisForDataset(i);
+                renderer.drawAnnotations(g2, dataArea, domainAxis, rangeAxis, 
+                        Layer.BACKGROUND, info);
+            }
         }
-        g2.setClip(originalClip);
-        g2.setComposite(originalComposite);
 
-        drawOutline(g2, dataArea);
+        // render data items...
+        for (int datasetIndex : datasetIndices) {
+            foundData = render(g2, dataArea, datasetIndex, info, 
+                    crosshairState) || foundData;
+        }
 
-    }
+        // draw foreground annotations
+        for (int i : rendererIndices) {
+            XYItemRenderer renderer = getRenderer(i);
+            if (renderer != null) {
+                    ValueAxis domainAxis = getDomainAxisForDataset(i);
+                    ValueAxis rangeAxis = getRangeAxisForDataset(i);
+                renderer.drawAnnotations(g2, dataArea, domainAxis, rangeAxis, 
+                            Layer.FOREGROUND, info);
+            }
+        }
+		return foundData;
+	}
+
+	private void rangeaxis_extracted(Graphics2D g2, PlotState parentState, Rectangle2D dataArea,
+			Map<Axis, AxisState> axisStateMap) {
+		AxisState domainAxisState = axisStateMap.get(getDomainAxis());
+        if (domainAxisState == null) {
+            if (parentState != null) {
+                domainAxisState = parentState.getSharedAxisStates()
+                        .get(getDomainAxis());
+            }
+        }
+
+        AxisState rangeAxisState = axisStateMap.get(getRangeAxis());
+        if (rangeAxisState == null) {
+            if (parentState != null) {
+                rangeAxisState = parentState.getSharedAxisStates()
+                        .get(getRangeAxis());
+            }
+        }
+        if (domainAxisState != null) {
+            drawDomainTickBands(g2, dataArea, domainAxisState.getTicks());
+        }
+        if (rangeAxisState != null) {
+            drawRangeTickBands(g2, dataArea, rangeAxisState.getTicks());
+        }
+        if (domainAxisState != null) {
+            drawDomainGridlines(g2, dataArea, domainAxisState.getTicks());
+            drawZeroDomainBaseline(g2, dataArea);
+        }
+        if (rangeAxisState != null) {
+            drawRangeGridlines(g2, dataArea, rangeAxisState.getTicks());
+            drawZeroRangeBaseline(g2, dataArea);
+        }
+	}
+
+	private void anchor_extracted(Point2D anchor, Rectangle2D dataArea, PlotOrientation orient,
+			CrosshairState crosshairState) {
+		if (anchor != null) {
+            ValueAxis domainAxis = getDomainAxis();
+            if (domainAxis != null) {
+                double x;
+                if (orient == PlotOrientation.VERTICAL) {
+                    x = domainAxis.java2DToValue(anchor.getX(), dataArea,
+                            getDomainAxisEdge());
+                }
+                else {
+                    x = domainAxis.java2DToValue(anchor.getY(), dataArea,
+                            getDomainAxisEdge());
+                }
+                crosshairState.setAnchorX(x);
+            }
+            ValueAxis rangeAxis = getRangeAxis();
+            if (rangeAxis != null) {
+                double y;
+                if (orient == PlotOrientation.VERTICAL) {
+                    y = rangeAxis.java2DToValue(anchor.getY(), dataArea,
+                            getRangeAxisEdge());
+                }
+                else {
+                    y = rangeAxis.java2DToValue(anchor.getX(), dataArea,
+                            getRangeAxisEdge());
+                }
+                crosshairState.setAnchorY(y);
+            }
+        }
+	}
 
     /**
      * Returns the indices of the non-null datasets in the specified order.

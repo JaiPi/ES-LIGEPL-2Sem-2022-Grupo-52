@@ -243,7 +243,120 @@ public class StatisticalLineAndShapeRenderer extends LineAndShapeRenderer
         // visible) - it looks better if the shape fill colour is different to
         // the line colour
         Number sdv = statDataset.getStdDevValue(row, column);
-        if (pass == 1 && sdv != null) {
+        ifremove_extract(g2, dataArea, plot, rangeAxis, row, column, pass, meanValue, orientation, x1, sdv);
+
+        Shape hotspot = null;
+        hotspot = ifremove2_extract(g2, dataset, row, column, pass, meanValue, orientation, x1, y1, hotspot);
+
+        ifremove3_extracr(g2, dataArea, plot, domainAxis, rangeAxis, dataset, row, column, pass, visibleRow,
+				visibleRowCount, statDataset, orientation, x1, y1);
+
+        if (pass == 1) {
+            // add an item entity, if this information is being collected
+            EntityCollection entities = state.getEntityCollection();
+            if (entities != null) {
+                addEntity(entities, hotspot, dataset, row, column, x1, y1);
+            }
+        }
+
+    }
+
+	private void ifremove3_extracr(Graphics2D g2, Rectangle2D dataArea, CategoryPlot plot, CategoryAxis domainAxis,
+			ValueAxis rangeAxis, CategoryDataset dataset, int row, int column, int pass, int visibleRow,
+			int visibleRowCount, StatisticalCategoryDataset statDataset, PlotOrientation orientation, double x1,
+			double y1) {
+		if (pass == 0 && getItemLineVisible(row, column)) {
+            if (column != 0) {
+
+                Number previousValue = statDataset.getValue(row, column - 1);
+                if (previousValue != null) {
+
+                    // previous data point...
+                    double previous = previousValue.doubleValue();
+                    double x0;
+                    if (getUseSeriesOffset()) {
+                        x0 = domainAxis.getCategorySeriesMiddle(
+                                column - 1, dataset.getColumnCount(),
+                                visibleRow, visibleRowCount,
+                                getItemMargin(), dataArea,
+                                plot.getDomainAxisEdge());
+                    }
+                    else {
+                        x0 = domainAxis.getCategoryMiddle(column - 1,
+                                getColumnCount(), dataArea,
+                                plot.getDomainAxisEdge());
+                    }
+                    double y0 = rangeAxis.valueToJava2D(previous, dataArea,
+                            plot.getRangeAxisEdge());
+
+                    Line2D line = null;
+                    if (orientation == PlotOrientation.HORIZONTAL) {
+                        line = new Line2D.Double(y0, x0, y1, x1);
+                    }
+                    else if (orientation == PlotOrientation.VERTICAL) {
+                        line = new Line2D.Double(x0, y0, x1, y1);
+                    }
+                    g2.setPaint(getItemPaint(row, column));
+                    g2.setStroke(getItemStroke(row, column));
+                    g2.draw(line);
+                }
+            }
+        }
+	}
+
+	private Shape ifremove2_extract(Graphics2D g2, CategoryDataset dataset, int row, int column, int pass,
+			Number meanValue, PlotOrientation orientation, double x1, double y1, Shape hotspot) {
+		if (pass == 1 && getItemShapeVisible(row, column)) {
+            Shape shape = getItemShape(row, column);
+            if (orientation == PlotOrientation.HORIZONTAL) {
+                shape = ShapeUtils.createTranslatedShape(shape, y1, x1);
+            }
+            else if (orientation == PlotOrientation.VERTICAL) {
+                shape = ShapeUtils.createTranslatedShape(shape, x1, y1);
+            }
+            hotspot = shape;
+            
+            ifremove22_extract(g2, row, column, shape);
+            if (getDrawOutlines()) {
+                if (getUseOutlinePaint()) {
+                    g2.setPaint(getItemOutlinePaint(row, column));
+                }
+                else {
+                    g2.setPaint(getItemPaint(row, column));
+                }
+                g2.setStroke(getItemOutlineStroke(row, column));
+                g2.draw(shape);
+            }
+            // draw the item label if there is one...
+            if (isItemLabelVisible(row, column)) {
+                if (orientation == PlotOrientation.HORIZONTAL) {
+                    drawItemLabel(g2, orientation, dataset, row, column,
+                            y1, x1, (meanValue.doubleValue() < 0.0));
+                }
+                else if (orientation == PlotOrientation.VERTICAL) {
+                    drawItemLabel(g2, orientation, dataset, row, column,
+                            x1, y1, (meanValue.doubleValue() < 0.0));
+                }
+            }
+        }
+		return hotspot;
+	}
+
+	private void ifremove22_extract(Graphics2D g2, int row, int column, Shape shape) {
+		if (getItemShapeFilled(row, column)) {
+		    if (getUseFillPaint()) {
+		        g2.setPaint(getItemFillPaint(row, column));
+		    }
+		    else {
+		        g2.setPaint(getItemPaint(row, column));
+		    }
+		    g2.fill(shape);
+		}
+	}
+
+	private void ifremove_extract(Graphics2D g2, Rectangle2D dataArea, CategoryPlot plot, ValueAxis rangeAxis, int row,
+			int column, int pass, Number meanValue, PlotOrientation orientation, double x1, Number sdv) {
+		if (pass == 1 && sdv != null) {
             //standard deviation lines
             RectangleEdge yAxisLocation = plot.getRangeAxisEdge();
             double valueDelta = sdv.doubleValue();
@@ -301,97 +414,7 @@ public class StatisticalLineAndShapeRenderer extends LineAndShapeRenderer
             }
 
         }
-
-        Shape hotspot = null;
-        if (pass == 1 && getItemShapeVisible(row, column)) {
-            Shape shape = getItemShape(row, column);
-            if (orientation == PlotOrientation.HORIZONTAL) {
-                shape = ShapeUtils.createTranslatedShape(shape, y1, x1);
-            }
-            else if (orientation == PlotOrientation.VERTICAL) {
-                shape = ShapeUtils.createTranslatedShape(shape, x1, y1);
-            }
-            hotspot = shape;
-            
-            if (getItemShapeFilled(row, column)) {
-                if (getUseFillPaint()) {
-                    g2.setPaint(getItemFillPaint(row, column));
-                }
-                else {
-                    g2.setPaint(getItemPaint(row, column));
-                }
-                g2.fill(shape);
-            }
-            if (getDrawOutlines()) {
-                if (getUseOutlinePaint()) {
-                    g2.setPaint(getItemOutlinePaint(row, column));
-                }
-                else {
-                    g2.setPaint(getItemPaint(row, column));
-                }
-                g2.setStroke(getItemOutlineStroke(row, column));
-                g2.draw(shape);
-            }
-            // draw the item label if there is one...
-            if (isItemLabelVisible(row, column)) {
-                if (orientation == PlotOrientation.HORIZONTAL) {
-                    drawItemLabel(g2, orientation, dataset, row, column,
-                            y1, x1, (meanValue.doubleValue() < 0.0));
-                }
-                else if (orientation == PlotOrientation.VERTICAL) {
-                    drawItemLabel(g2, orientation, dataset, row, column,
-                            x1, y1, (meanValue.doubleValue() < 0.0));
-                }
-            }
-        }
-
-        if (pass == 0 && getItemLineVisible(row, column)) {
-            if (column != 0) {
-
-                Number previousValue = statDataset.getValue(row, column - 1);
-                if (previousValue != null) {
-
-                    // previous data point...
-                    double previous = previousValue.doubleValue();
-                    double x0;
-                    if (getUseSeriesOffset()) {
-                        x0 = domainAxis.getCategorySeriesMiddle(
-                                column - 1, dataset.getColumnCount(),
-                                visibleRow, visibleRowCount,
-                                getItemMargin(), dataArea,
-                                plot.getDomainAxisEdge());
-                    }
-                    else {
-                        x0 = domainAxis.getCategoryMiddle(column - 1,
-                                getColumnCount(), dataArea,
-                                plot.getDomainAxisEdge());
-                    }
-                    double y0 = rangeAxis.valueToJava2D(previous, dataArea,
-                            plot.getRangeAxisEdge());
-
-                    Line2D line = null;
-                    if (orientation == PlotOrientation.HORIZONTAL) {
-                        line = new Line2D.Double(y0, x0, y1, x1);
-                    }
-                    else if (orientation == PlotOrientation.VERTICAL) {
-                        line = new Line2D.Double(x0, y0, x1, y1);
-                    }
-                    g2.setPaint(getItemPaint(row, column));
-                    g2.setStroke(getItemStroke(row, column));
-                    g2.draw(line);
-                }
-            }
-        }
-
-        if (pass == 1) {
-            // add an item entity, if this information is being collected
-            EntityCollection entities = state.getEntityCollection();
-            if (entities != null) {
-                addEntity(entities, hotspot, dataset, row, column, x1, y1);
-            }
-        }
-
-    }
+	}
 
     /**
      * Tests this renderer for equality with an arbitrary object.
