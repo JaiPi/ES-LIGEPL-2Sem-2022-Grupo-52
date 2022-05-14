@@ -697,43 +697,7 @@ public class StandardXYItemRenderer extends AbstractXYItemRenderer
 
         if (getPlotLines()) {
             if (this.drawSeriesLineAsPath) {
-                State s = (State) state;
-                if (s.getSeriesIndex() != series) {
-                    // we are starting a new series path
-                    s.seriesPath.reset();
-                    s.lastPointGood = false;
-                    s.setSeriesIndex(series);
-                }
-
-                // update path to reflect latest point
-                if (itemVisible && !Double.isNaN(transX1)
-                        && !Double.isNaN(transY1)) {
-                    float x = (float) transX1;
-                    float y = (float) transY1;
-                    if (orientation == PlotOrientation.HORIZONTAL) {
-                        x = (float) transY1;
-                        y = (float) transX1;
-                    }
-                    if (s.isLastPointGood()) {
-                        // TODO: check threshold
-                        s.seriesPath.lineTo(x, y);
-                    }
-                    else {
-                        s.seriesPath.moveTo(x, y);
-                    }
-                    s.setLastPointGood(true);
-                }
-                else {
-                    s.setLastPointGood(false);
-                }
-                if (item == dataset.getItemCount(series) - 1) {
-                    if (s.seriesIndex == series) {
-                        // draw path
-                        g2.setStroke(lookupSeriesStroke(series));
-                        g2.setPaint(lookupSeriesPaint(series));
-                        g2.draw(s.seriesPath);
-                    }
-                }
+                drawseriestrue_extraxt(g2, state, dataset, series, item, itemVisible, orientation, transX1, transY1);
             }
 
             else if (item != 0 && itemVisible) {
@@ -768,18 +732,7 @@ public class StandardXYItemRenderer extends AbstractXYItemRenderer
                             return;
                         }
 
-                        if (orientation == PlotOrientation.HORIZONTAL) {
-                            state.workingLine.setLine(transY0, transX0,
-                                    transY1, transX1);
-                        }
-                        else if (orientation == PlotOrientation.VERTICAL) {
-                            state.workingLine.setLine(transX0, transY0,
-                                    transX1, transY1);
-                        }
-
-                        if (state.workingLine.intersects(dataArea)) {
-                            g2.draw(state.workingLine);
-                        }
+                        drawline_extracted(g2, state, dataArea, orientation, transX1, transY1, transX0, transY0);
                     }
                 }
             }
@@ -792,7 +745,72 @@ public class StandardXYItemRenderer extends AbstractXYItemRenderer
             return;
         }
 
-        if (getBaseShapesVisible()) {
+        entityArea = basesshapes_extract(g2, dataArea, series, item, entityArea, orientation, transX1, transY1);
+
+        if (getPlotImages()) {
+            Image image = getImage(plot, series, item, transX1, transY1);
+            if (image != null) {
+                Point hotspot = getImageHotspot(plot, series, item, transX1,
+                        transY1, image);
+                g2.drawImage(image, (int) (transX1 - hotspot.getX()),
+                        (int) (transY1 - hotspot.getY()), null);
+                entityArea = new Rectangle2D.Double(transX1 - hotspot.getX(),
+                        transY1 - hotspot.getY(), image.getWidth(null),
+                        image.getHeight(null));
+            }
+
+        }
+
+        orientation_extract(g2, dataArea, plot, dataset, series, item, crosshairState, entityArea, entities,
+				orientation, x1, y1, transX1, transY1);
+
+    }
+
+	private void drawline_extracted(Graphics2D g2, XYItemRendererState state, Rectangle2D dataArea,
+			PlotOrientation orientation, double transX1, double transY1, double transX0, double transY0) {
+		if (orientation == PlotOrientation.HORIZONTAL) {
+		    state.workingLine.setLine(transY0, transX0,
+		            transY1, transX1);
+		}
+		else if (orientation == PlotOrientation.VERTICAL) {
+		    state.workingLine.setLine(transX0, transY0,
+		            transX1, transY1);
+		}
+
+		if (state.workingLine.intersects(dataArea)) {
+		    g2.draw(state.workingLine);
+		}
+	}
+
+	private void orientation_extract(Graphics2D g2, Rectangle2D dataArea, XYPlot plot, XYDataset dataset, int series,
+			int item, CrosshairState crosshairState, Shape entityArea, EntityCollection entities,
+			PlotOrientation orientation, double x1, double y1, double transX1, double transY1) {
+		double xx = transX1;
+        double yy = transY1;
+        if (orientation == PlotOrientation.HORIZONTAL) {
+            xx = transY1;
+            yy = transX1;
+        }
+
+        // draw the item label if there is one...
+        if (isItemLabelVisible(series, item)) {
+            drawItemLabel(g2, orientation, dataset, series, item, xx, yy,
+                    (y1 < 0.0));
+        }
+
+        int datasetIndex = plot.indexOf(dataset);
+        updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
+                transX1, transY1, orientation);
+
+        // add an entity for the item...
+        if (entities != null && ShapeUtils.isPointInRect(dataArea, xx, yy)) {
+            addEntity(entities, entityArea, dataset, series, item, xx, yy);
+        }
+	}
+
+	private Shape basesshapes_extract(Graphics2D g2, Rectangle2D dataArea, int series, int item, Shape entityArea,
+			PlotOrientation orientation, double transX1, double transY1) {
+		if (getBaseShapesVisible()) {
 
             Shape shape = getItemShape(series, item);
             if (orientation == PlotOrientation.HORIZONTAL) {
@@ -814,44 +832,49 @@ public class StandardXYItemRenderer extends AbstractXYItemRenderer
             entityArea = shape;
 
         }
+		return entityArea;
+	}
 
-        if (getPlotImages()) {
-            Image image = getImage(plot, series, item, transX1, transY1);
-            if (image != null) {
-                Point hotspot = getImageHotspot(plot, series, item, transX1,
-                        transY1, image);
-                g2.drawImage(image, (int) (transX1 - hotspot.getX()),
-                        (int) (transY1 - hotspot.getY()), null);
-                entityArea = new Rectangle2D.Double(transX1 - hotspot.getX(),
-                        transY1 - hotspot.getY(), image.getWidth(null),
-                        image.getHeight(null));
-            }
+	private void drawseriestrue_extraxt(Graphics2D g2, XYItemRendererState state, XYDataset dataset, int series,
+			int item, boolean itemVisible, PlotOrientation orientation, double transX1, double transY1) {
+		State s = (State) state;
+		if (s.getSeriesIndex() != series) {
+		    // we are starting a new series path
+		    s.seriesPath.reset();
+		    s.lastPointGood = false;
+		    s.setSeriesIndex(series);
+		}
 
-        }
-
-        double xx = transX1;
-        double yy = transY1;
-        if (orientation == PlotOrientation.HORIZONTAL) {
-            xx = transY1;
-            yy = transX1;
-        }
-
-        // draw the item label if there is one...
-        if (isItemLabelVisible(series, item)) {
-            drawItemLabel(g2, orientation, dataset, series, item, xx, yy,
-                    (y1 < 0.0));
-        }
-
-        int datasetIndex = plot.indexOf(dataset);
-        updateCrosshairValues(crosshairState, x1, y1, datasetIndex,
-                transX1, transY1, orientation);
-
-        // add an entity for the item...
-        if (entities != null && ShapeUtils.isPointInRect(dataArea, xx, yy)) {
-            addEntity(entities, entityArea, dataset, series, item, xx, yy);
-        }
-
-    }
+		// update path to reflect latest point
+		if (itemVisible && !Double.isNaN(transX1)
+		        && !Double.isNaN(transY1)) {
+		    float x = (float) transX1;
+		    float y = (float) transY1;
+		    if (orientation == PlotOrientation.HORIZONTAL) {
+		        x = (float) transY1;
+		        y = (float) transX1;
+		    }
+		    if (s.isLastPointGood()) {
+		        // TODO: check threshold
+		        s.seriesPath.lineTo(x, y);
+		    }
+		    else {
+		        s.seriesPath.moveTo(x, y);
+		    }
+		    s.setLastPointGood(true);
+		}
+		else {
+		    s.setLastPointGood(false);
+		}
+		if (item == dataset.getItemCount(series) - 1) {
+		    if (s.seriesIndex == series) {
+		        // draw path
+		        g2.setStroke(lookupSeriesStroke(series));
+		        g2.setPaint(lookupSeriesPaint(series));
+		        g2.draw(s.seriesPath);
+		    }
+		}
+	}
 
     /**
      * Tests this renderer for equality with another object.
