@@ -112,7 +112,9 @@ import org.jfree.chart.ChartUtils;
 import org.jfree.chart.JFreeChart;
 
 import org.jfree.chart.swing.editor.ChartEditor;
-import org.jfree.chart.swing.editor.ChartEditorManager;
+import org.jfree.chart.swing.editor.ChartEditorFactory;
+//import org.jfree.chart.swing.editor.ChartEditorManager;
+import org.jfree.chart.swing.editor.DefaultChartEditorFactory;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.event.ChartChangeEvent;
@@ -2388,7 +2390,9 @@ public class ChartPanel extends JPanel implements ChartChangeListener,
      */
     public void doEditChartProperties() {
 
-        ChartEditor editor = ChartEditorManager.getChartEditor(this.chart);
+    	ChartEditorFactory factory = new DefaultChartEditorFactory();
+//        ChartEditor editor = ChartEditorManager.getChartEditor(this.chart);
+    	ChartEditor editor = factory.createEditor(chart);
         int result = JOptionPane.showConfirmDialog(this, editor,
                 localizationResources.getString("Chart_Properties"),
                 JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
