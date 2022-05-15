@@ -1,0 +1,32 @@
+--module-path
+'C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/target/jfreechart-2.0.0-SNAPSHOT.jar'
+--patch-module
+org.jfree.chart='C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/src/main/java;C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/target/generated-sources/annotations;C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/src/main/javadoc'
+-encoding
+'UTF-8'
+-overview
+'C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/src/main/javadoc/overview.html'
+-protected
+-source
+'11'
+--module-source-path
+'C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/target/apidocs/src'
+-author
+-bottom
+'Copyright &#169; 2001&#x2013;2022 <a href="http://www.jfree.org/">JFree.org</a>. All rights reserved.'
+-charset
+'UTF-8'
+-d
+'C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/target/apidocs'
+-docencoding
+'UTF-8'
+-docfilessubdirs
+-doctitle
+'JFreeChart-2.0 2.0.0-SNAPSHOT API'
+-linkoffline
+'https://docs.oracle.com/en/java/javase/11/docs/api' 'C:/Users/jotta/git/ES-LIGEPL-2Sem-2022-Grupo-52/target/javadoc-bundle-options'
+-linksource
+-use
+-version
+-windowtitle
+'JFreeChart-2.0 2.0.0-SNAPSHOT API'

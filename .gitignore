@@ -1,5 +1,6 @@
 /nbproject/private/
-/target/
+#/target/*
+!target/apidocs/*
 /javadoc/
 
 # Compiled class file

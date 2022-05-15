@@ -1,0 +1,4 @@
+--patch-module
+org.jfree.chart=_
+--add-reads
+org.jfree.chart=ALL-UNNAMED
