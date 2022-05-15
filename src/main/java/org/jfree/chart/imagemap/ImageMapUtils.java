@@ -44,7 +44,7 @@ import org.jfree.chart.ChartRenderingInfo;
 import org.jfree.chart.entity.ChartEntity;
 import org.jfree.chart.entity.EntityCollection;
 import org.jfree.chart.internal.Args;
-import org.jfree.chart.util.StringUtils;
+//import org.jfree.chart.util.StringUtils;
 
 /**
  * Collection of utility methods related to producing image maps.
@@ -156,6 +156,16 @@ public class ImageMapUtils {
      *
      * @return The map tag.
      */
+    
+    public static String getLineSeparator() {
+        try {
+            return System.getProperty("line.separator", "\n");
+        }
+        catch (Exception e) {
+            return "\n";
+        }
+    }
+    
     public static String getImageMap(String name, ChartRenderingInfo info,
             ToolTipTagFragmentGenerator toolTipTagFragmentGenerator,
             URLTagFragmentGenerator urlTagFragmentGenerator) {
@@ -163,7 +173,7 @@ public class ImageMapUtils {
         StringBuilder sb = new StringBuilder();
         sb.append("<map id=\"").append(htmlEscape(name));
         sb.append("\" name=\"").append(htmlEscape(name)).append("\">");
-        sb.append(StringUtils.getLineSeparator());
+        sb.append(getLineSeparator());
         EntityCollection entities = info.getEntityCollection();
         if (entities != null) {
             int count = entities.getEntityCount();
@@ -176,7 +186,7 @@ public class ImageMapUtils {
                             urlTagFragmentGenerator);
                     if (area.length() > 0) {
                         sb.append(area);
-                        sb.append(StringUtils.getLineSeparator());
+                        sb.append(getLineSeparator());
                     }
                 }
             }
