@@ -4,16 +4,21 @@ Projecto de Engenharia de Software 2022 - Grupo 52
 JFreeChart
 ==========
 
-CONTRIBUTORS
-------------
-André Branco
-Gonçalo Duarte
-Jaime Pignatelli
-João Faustino
-Ricardo
-Tomás Duarte
+***********  CONTRIBUTORS  *************
+***                                  ***
+**     90286 - GONÇALO DUARTE         **
+**     87657 - JOÃO FAUSTINO          **
+**     90274 - ANDRÉ BRANCO           **
+**     93227 - CARLOS PINTO           **
+**     60926 - TOMÁS DUARTE           **
+**     78679 - JAIME PIGNATELLI       **
+***                                  ***
+****************************************
 
-
+****       TAREFAS INCOMPLETAS      ****
+- Não foram identificados Code Smells Data Class;
+- Por este motivo não foi efetuado refactoring a Data Class;
+- A cobertura de testes final ficou abaixo dos 50%;
 
 Version 2.0.0, not yet released.
 
